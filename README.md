@@ -1,6 +1,7 @@
 # weightedrand
 
-> Blazing fast weighted random selection for Golang :balance_scale:
+[![Build Status](https://travis-ci.org/mroth/weightedrand.svg?branch=master)](https://travis-ci.org/mroth/weightedrand)
+[![GoDoc](https://godoc.org/github.com/mroth/weightedrand?status.svg)](https://godoc.org/github.com/mroth/weightedrand)
 
 Randomly select an element from some kind of list, with the chances of each
 element to be selected not being equal, but defined by relative "weights" (or
