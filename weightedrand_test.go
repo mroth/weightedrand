@@ -16,7 +16,7 @@ func mockChoices(n int) []Choice {
 	for i := 0; i < n; i++ {
 		s := "⚽️"
 		w := rand.Intn(10)
-		c := Choice{Item: s, Weight: w}
+		c := Choice{Item: s, Weight: uint(w)}
 		choices = append(choices, c)
 	}
 	return choices
@@ -35,7 +35,7 @@ func TestWeightedChoice(t *testing.T) {
 	presorted data. */
 	list := rand.Perm(10)
 	for _, v := range list {
-		c := Choice{Weight: v, Item: v}
+		c := Choice{Weight: uint(v), Item: v}
 		choices = append(choices, c)
 	}
 	t.Log("FYI mocked choices of", choices)
@@ -59,8 +59,8 @@ func TestWeightedChoice(t *testing.T) {
 	for i, c := range choices[0 : len(choices)-1] {
 		next := choices[i+1]
 		cw, nw := c.Weight, next.Weight
-		if !(chosenCount[cw] < chosenCount[nw]) {
-			t.Error("Value not lesser", cw, nw, chosenCount[cw], chosenCount[nw])
+		if !(chosenCount[int(cw)] < chosenCount[int(nw)]) {
+			t.Error("Value not lesser", cw, nw, chosenCount[int(cw)], chosenCount[int(nw)])
 		}
 	}
 

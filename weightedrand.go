@@ -18,7 +18,7 @@ import (
 // Choice is a generic wrapper that can be used to add weights for any object
 type Choice struct {
 	Item   interface{}
-	Weight int
+	Weight uint
 }
 
 // A Chooser caches many possible Choices in a structure designed to improve
@@ -38,7 +38,7 @@ func NewChooser(cs ...Choice) Chooser {
 	totals := make([]int, n, n)
 	runningTotal := 0
 	for i, c := range cs {
-		runningTotal += c.Weight
+		runningTotal += int(c.Weight)
 		totals[i] = runningTotal
 	}
 	return Chooser{data: cs, totals: totals, max: runningTotal}
