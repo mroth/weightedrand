@@ -1,6 +1,7 @@
 # weightedrand
 
 [![Build Status](https://travis-ci.org/mroth/weightedrand.svg?branch=master)](https://travis-ci.org/mroth/weightedrand)
+[![Go Report Card](https://goreportcard.com/badge/github.com/mroth/weightedrand)](https://goreportcard.com/report/github.com/mroth/weightedrand)
 [![GoDoc](https://godoc.org/github.com/mroth/weightedrand?status.svg)](https://godoc.org/github.com/mroth/weightedrand)
 
 Randomly select an element from some kind of list, with the chances of each
