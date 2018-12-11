@@ -8,7 +8,7 @@
 // In contrast, this package creates a presorted cache optimized for binary
 // search, allowing repeated selections from the same set to be significantly
 // faster, especially for large data sets.
-package weightedrand // import "github.com/mroth/weightedrand"
+package weightedrand
 
 import (
 	"math/rand"
