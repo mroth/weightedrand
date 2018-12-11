@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"testing"
 	"time"
-
-	"github.com/jmcvetta/randutil"
 )
 
 func init() {
@@ -86,23 +84,26 @@ func BenchmarkChooser(b *testing.B) {
 	}
 }
 
-func BenchmarkRandutil(b *testing.B) {
-	if testing.Short() {
-		b.Skip()
-	}
-	for n := BMminChoices; n <= BMmaxChoices; n *= 10 {
-		b.Run(strconv.Itoa(n), func(b *testing.B) {
-			b.StopTimer()
-			choices := mockChoices(n)
-			choicesR := make([]randutil.Choice, len(choices), len(choices))
-			for i, c := range choices {
-				choicesR[i] = randutil.Choice{Weight: c.Weight, Item: c.Item}
-			}
-			b.StartTimer()
+// This following is a historic artifact from comparative benchmarking with
+// randutil, however it is not critical to ongoing development.
 
-			for i := 0; i < b.N; i++ {
-				randutil.WeightedChoice(choicesR)
-			}
-		})
-	}
-}
+// func BenchmarkRandutil(b *testing.B) {
+// 	if testing.Short() {
+// 		b.Skip()
+// 	}
+// 	for n := BMminChoices; n <= BMmaxChoices; n *= 10 {
+// 		b.Run(strconv.Itoa(n), func(b *testing.B) {
+// 			b.StopTimer()
+// 			choices := mockChoices(n)
+// 			choicesR := make([]randutil.Choice, len(choices), len(choices))
+// 			for i, c := range choices {
+// 				choicesR[i] = randutil.Choice{Weight: c.Weight, Item: c.Item}
+// 			}
+// 			b.StartTimer()
+
+// 			for i := 0; i < b.N; i++ {
+// 				randutil.WeightedChoice(choicesR)
+// 			}
+// 		})
+// 	}
+// }
