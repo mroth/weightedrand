@@ -1,3 +1,13 @@
+// Package weightedrand contains a performant data structure and algorithm used
+// to randomly select an element from some kind of list, where the chances of
+// each element to be selected not being equal, but defined by relative
+// "weights" (or probabilities). This is called weighted random selection.
+//
+// There is an existing Go library that has a generic implementation of this as
+// github.com/jmcvetta/randutil, which optimizes for the single operation case.
+// In contrast, this package creates a presorted cache optimized for binary
+// search, allowing repeated selections from the same set to be significantly
+// faster, especially for large data sets.
 package weightedrand // import "github.com/mroth/weightedrand"
 
 import (
@@ -11,14 +21,15 @@ type Choice struct {
 	Weight int
 }
 
-// A Chooser caches the possible Choices, to improve performance on repeated calls
+// A Chooser caches many possible Choices in a structure designed to improve
+// performance on repeated calls for weighted random selection.
 type Chooser struct {
 	data   []Choice
 	totals []int
 	max    int
 }
 
-// NewChooser initializes a new Chooser, creating the caches
+// NewChooser initializes a new Chooser consisting of the possible Choices.
 func NewChooser(cs ...Choice) Chooser {
 	n := len(cs)
 	sort.Slice(cs, func(i, j int) bool {
@@ -33,7 +44,7 @@ func NewChooser(cs ...Choice) Chooser {
 	return Chooser{data: cs, totals: totals, max: runningTotal}
 }
 
-// Pick returns a single weighted random Choice.Item from the Chooser
+// Pick returns a single weighted random Choice.Item from the Chooser.
 func (chs Chooser) Pick() interface{} {
 	r := rand.Intn(chs.max) + 1
 	i := sort.SearchInts(chs.totals, r)
