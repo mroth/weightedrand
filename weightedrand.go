@@ -31,11 +31,10 @@ type Chooser struct {
 
 // NewChooser initializes a new Chooser consisting of the possible Choices.
 func NewChooser(cs ...Choice) Chooser {
-	n := len(cs)
 	sort.Slice(cs, func(i, j int) bool {
 		return cs[i].Weight < cs[j].Weight
 	})
-	totals := make([]int, n, n)
+	totals := make([]int, len(cs))
 	runningTotal := 0
 	for i, c := range cs {
 		runningTotal += int(c.Weight)
