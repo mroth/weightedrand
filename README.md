@@ -8,7 +8,7 @@ Randomly select an element from some kind of list, with the chances of each
 element to be selected not being equal, but defined by relative "weights" (or
 probabilities). This is called weighted random selection.
 
-The existing Golang library that has a generic implementation of this is
+The existing Go library that has a generic implementation of this is
 [`github.com/jmcvetta/randutil`][1], which optimizes for the single operation
 case. In contrast, this library creates a presorted cache optimized for binary
 search, allowing repeated selections from the same set to be significantly
