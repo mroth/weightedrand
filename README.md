@@ -1,6 +1,6 @@
 # weightedrand
 
-[![Build Status](https://travis-ci.org/mroth/weightedrand.svg?branch=master)](https://travis-ci.org/mroth/weightedrand)
+[![Build Status](https://github.com/mroth/weightedrand/workflows/Test/badge.svg)](https://github.com/mroth/weightedrand/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mroth/weightedrand)](https://goreportcard.com/report/github.com/mroth/weightedrand)
 [![GoDoc](https://godoc.org/github.com/mroth/weightedrand?status.svg)](https://godoc.org/github.com/mroth/weightedrand)
 
