@@ -69,13 +69,25 @@ func TestWeightedChoice(t *testing.T) {
 const BMminChoices = 10
 const BMmaxChoices = 1000000
 
-func BenchmarkChooser(b *testing.B) {
+func BenchmarkNewChooser(b *testing.B) {
 	for n := BMminChoices; n <= BMmaxChoices; n *= 10 {
 		b.Run(strconv.Itoa(n), func(b *testing.B) {
-			b.StopTimer()
+			choices := mockChoices(n)
+			b.ResetTimer()
+
+			for i := 0; i < b.N; i++ {
+				_ = NewChooser(choices...)
+			}
+		})
+	}
+}
+
+func BenchmarkPick(b *testing.B) {
+	for n := BMminChoices; n <= BMmaxChoices; n *= 10 {
+		b.Run(strconv.Itoa(n), func(b *testing.B) {
 			choices := mockChoices(n)
 			chooser := NewChooser(choices...)
-			b.StartTimer()
+			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
 				chooser.Pick()
