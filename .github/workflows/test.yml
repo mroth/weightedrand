@@ -6,16 +6,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go:        
-          - '1.10.x'
-          - '1.11.x'
-          - '1.12.x'
-          - '1.13.x'
-          - '1.14.x'
+        go:
+          - "1.10.x"
+          - "1.11.x"
+          - "1.12.x"
+          - "1.13.x"
+          - "1.14.x"
     name: Go ${{ matrix.go }} test
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v1
+      - uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go }}
       - run: go test
