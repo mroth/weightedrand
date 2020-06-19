@@ -3,11 +3,11 @@
 // each element to be selected not being equal, but defined by relative
 // "weights" (or probabilities). This is called weighted random selection.
 //
-// There is an existing Go library that has a generic implementation of this as
-// github.com/jmcvetta/randutil, which optimizes for the single operation case.
-// In contrast, this package creates a presorted cache optimized for binary
-// search, allowing repeated selections from the same set to be significantly
-// faster, especially for large data sets.
+// Compare this package with (github.com/jmcvetta/randutil).WeightedChoice,
+// which is optimized for the single operation case. In contrast, this package
+// creates a presorted cache optimized for binary search, allowing for repeated
+// selections from the same set to be significantly faster, especially for large
+// data sets.
 package weightedrand
 
 import (

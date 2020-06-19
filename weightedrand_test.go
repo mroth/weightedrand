@@ -1,25 +1,31 @@
 package weightedrand
 
 import (
+	"fmt"
 	"math/rand"
 	"strconv"
 	"testing"
 	"time"
 )
 
-func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
+// In this example, we create a Chooser to pick from amongst various emoji fruit
+// runes. We assign a numeric weight to each choice. These weights are relative,
+// not on any absolute scoring system. In this trivial case, we will assign a
+// weight of 0 to all but one fruit, so that the output will be predictable.
+func Example() {
+	chooser := NewChooser(
+		NewChoice('🍋', 0),
+		NewChoice('🍊', 0),
+		NewChoice('🍉', 0),
+		NewChoice('🥑', 42),
+	)
+	fruit := chooser.Pick().(rune)
+	fmt.Printf("%c", fruit)
+	//Output: 🥑
 }
 
-func mockChoices(n int) []Choice {
-	choices := make([]Choice, 0, n)
-	for i := 0; i < n; i++ {
-		s := "⚽️"
-		w := rand.Intn(10)
-		c := NewChoice(s, uint(w))
-		choices = append(choices, c)
-	}
-	return choices
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
 }
 
 // TestWeightedChoice assembles a list of choices, weighted 0-9, and tests that
@@ -94,6 +100,17 @@ func BenchmarkPick(b *testing.B) {
 			}
 		})
 	}
+}
+
+func mockChoices(n int) []Choice {
+	choices := make([]Choice, 0, n)
+	for i := 0; i < n; i++ {
+		s := "⚽️"
+		w := rand.Intn(10)
+		c := NewChoice(s, uint(w))
+		choices = append(choices, c)
+	}
+	return choices
 }
 
 // This following is a historic artifact from comparative benchmarking with
