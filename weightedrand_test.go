@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+/******************************************************************************
+*	Examples
+*******************************************************************************/
+
 // In this example, we create a Chooser to pick from amongst various emoji fruit
 // runes. We assign a numeric weight to each choice. These weights are relative,
 // not on any absolute scoring system. In this trivial case, we will assign a
@@ -24,39 +28,57 @@ func Example() {
 	//Output: 🥑
 }
 
+/******************************************************************************
+*	Tests
+*******************************************************************************/
+
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-// TestWeightedChoice assembles a list of choices, weighted 0-9, and tests that
-// over the course of 1,000,000 calls to WeightedChoice() each choice is
-// returned more often than choices with a lower weight.
-func TestWeightedChoice(t *testing.T) {
-	// Make weighted choices
-	var choices []Choice
-	chosenCount := make(map[int]int)
+const (
+	testChoices    = 10
+	testIterations = 1000000
+)
 
-	/* Similar to what is used in randutil test, but in randomized order to
-	avoid any issues with algorithms that are accidentally dependant on
-	presorted data. */
-	list := rand.Perm(10)
+// TestChooser_Pick assembles a list of Choices, weighted 0-9, and tests that
+// over the course of 1,000,000 calls to Pick() each choice is returned more
+// often than choices with a lower weight.
+func TestChooser_Pick(t *testing.T) {
+	choices := mockFrequencyChoices(t, testChoices)
+	chooser := NewChooser(choices...)
+	t.Log("totals in chooser", chooser.totals)
+
+	// run Pick() a million times, and record how often it returns each of the
+	// possible choices.
+	counts := make(map[int]int)
+	for i := 0; i < testIterations; i++ {
+		c := chooser.Pick()
+		counts[c.(int)]++
+	}
+
+	verifyFrequencyCounts(t, counts, choices)
+}
+
+// Similar to what is used in randutil test, but in randomized order to avoid
+// any issues with algorithms that are accidentally dependant on presorted data.
+func mockFrequencyChoices(t *testing.T, n int) []Choice {
+	t.Helper()
+	choices := make([]Choice, 0, n)
+	list := rand.Perm(n)
 	for _, v := range list {
 		c := NewChoice(v, uint(v))
 		choices = append(choices, c)
 	}
-	t.Log("FYI mocked choices of", choices)
+	t.Log("mocked choices of", choices)
+	return choices
+}
 
-	// Run WeightedChoice() a million times, and record how often it returns
-	// each of the possible choices.
-	chooser := NewChooser(choices...)
-	t.Log("values in chooser", chooser.totals)
-	for i := 0; i < 1000000; i++ {
-		c := chooser.Pick()
-		chosenCount[c.(int)]++
-	}
+func verifyFrequencyCounts(t *testing.T, counts map[int]int, choices []Choice) {
+	t.Helper()
 
 	// Ensure weight 0 results in no results
-	if cczero := chosenCount[0]; cczero != 0 {
+	if cczero := counts[0]; cczero != 0 {
 		t.Error("Weight 0 results appeared nonzero times: ", cczero)
 	}
 
@@ -65,12 +87,15 @@ func TestWeightedChoice(t *testing.T) {
 	for i, c := range choices[0 : len(choices)-1] {
 		next := choices[i+1]
 		cw, nw := c.Weight, next.Weight
-		if !(chosenCount[int(cw)] < chosenCount[int(nw)]) {
-			t.Error("Value not lesser", cw, nw, chosenCount[int(cw)], chosenCount[int(nw)])
+		if !(counts[int(cw)] < counts[int(nw)]) {
+			t.Error("Value not lesser", cw, nw, counts[int(cw)], counts[int(nw)])
 		}
 	}
-
 }
+
+/******************************************************************************
+*	Benchmarks
+*******************************************************************************/
 
 const BMminChoices = 10
 const BMmaxChoices = 1000000
