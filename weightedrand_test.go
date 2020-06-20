@@ -127,6 +127,21 @@ func BenchmarkPick(b *testing.B) {
 	}
 }
 
+func BenchmarkPickParallel(b *testing.B) {
+	for n := BMminChoices; n <= BMmaxChoices; n *= 10 {
+		b.Run(strconv.Itoa(n), func(b *testing.B) {
+			choices := mockChoices(n)
+			chooser := NewChooser(choices...)
+			b.ResetTimer()
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					chooser.Pick()
+				}
+			})
+		})
+	}
+}
+
 func mockChoices(n int) []Choice {
 	choices := make([]Choice, 0, n)
 	for i := 0; i < n; i++ {
