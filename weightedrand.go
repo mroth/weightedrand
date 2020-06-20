@@ -49,8 +49,26 @@ func NewChooser(cs ...Choice) Chooser {
 }
 
 // Pick returns a single weighted random Choice.Item from the Chooser.
+//
+// Utilizes global rand as the source of randomness -- you will likely want to
+// seed it.
 func (chs Chooser) Pick() interface{} {
 	r := rand.Intn(chs.max) + 1
+	i := sort.SearchInts(chs.totals, r)
+	return chs.data[i].Item
+}
+
+// PickSource returns a single weighted random Choice.Item from the Chooser,
+// utilizing the provided *rand.Rand source rs for randomness.
+//
+// The primary use-case for this is avoid lock contention from the global random
+// source if utilizing Chooser(s) from multiple goroutines in extremely
+// high-throughput situations.
+//
+// It is the responsibility of the caller to ensure the provided rand.Source is
+// safe from thread safety issues.
+func (chs Chooser) PickSource(rs *rand.Rand) interface{} {
+	r := rs.Intn(chs.max) + 1
 	i := sort.SearchInts(chs.totals, r)
 	return chs.data[i].Item
 }
