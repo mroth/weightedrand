@@ -2,6 +2,7 @@
 
 [![Build Status](https://github.com/mroth/weightedrand/workflows/test/badge.svg)](https://github.com/mroth/weightedrand/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mroth/weightedrand)](https://goreportcard.com/report/github.com/mroth/weightedrand)
+[![codecov](https://codecov.io/gh/mroth/weightedrand/branch/master/graph/badge.svg)](https://codecov.io/gh/mroth/weightedrand)
 [![GoDoc](https://godoc.org/github.com/mroth/weightedrand?status.svg)](https://godoc.org/github.com/mroth/weightedrand)
 
 > Fast weighted random selection for Go.
