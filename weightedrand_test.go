@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -58,6 +59,35 @@ func TestChooser_Pick(t *testing.T) {
 	}
 
 	verifyFrequencyCounts(t, counts, choices)
+}
+
+// TestChooser_PickSource is the same test methodology as TestChooser_Pick, but
+// here we use the PickSource method and access the same chooser concurrently
+// from multiple different goroutines, each providing its own source of
+// randomness.
+func TestChooser_PickSource(t *testing.T) {
+	choices := mockFrequencyChoices(t, testChoices)
+	chooser := NewChooser(choices...)
+	t.Log("totals in chooser", chooser.totals)
+
+	counts1 := make(map[int]int)
+	counts2 := make(map[int]int)
+	var wg sync.WaitGroup
+	wg.Add(2)
+	checker := func(counts map[int]int) {
+		defer wg.Done()
+		rs := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
+		for i := 0; i < testIterations/2; i++ {
+			c := chooser.PickSource(rs)
+			counts[c.(int)]++
+		}
+	}
+	go checker(counts1)
+	go checker(counts2)
+	wg.Wait()
+
+	verifyFrequencyCounts(t, counts1, choices)
+	verifyFrequencyCounts(t, counts2, choices)
 }
 
 // Similar to what is used in randutil test, but in randomized order to avoid
@@ -123,6 +153,22 @@ func BenchmarkPick(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				chooser.Pick()
 			}
+		})
+	}
+}
+
+func BenchmarkPickParallel(b *testing.B) {
+	for n := BMminChoices; n <= BMmaxChoices; n *= 10 {
+		b.Run(strconv.Itoa(n), func(b *testing.B) {
+			choices := mockChoices(n)
+			chooser := NewChooser(choices...)
+			b.ResetTimer()
+			b.RunParallel(func(pb *testing.PB) {
+				rs := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
+				for pb.Next() {
+					chooser.PickSource(rs)
+				}
+			})
 		})
 	}
 }
