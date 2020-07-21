@@ -4,17 +4,11 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/mroth/weightedrand)](https://goreportcard.com/report/github.com/mroth/weightedrand)
 [![GoDoc](https://godoc.org/github.com/mroth/weightedrand?status.svg)](https://godoc.org/github.com/mroth/weightedrand)
 
-Randomly select an element from some kind of list, with the chances of each
-element to be selected not being equal, but defined by relative "weights" (or
-probabilities). This is called weighted random selection.
+> Fast weighted random selection for Go.
 
-The existing Go library that has a generic implementation of this is
-[`github.com/jmcvetta/randutil`][1], which optimizes for the single operation
-case. In contrast, this library creates a presorted cache optimized for binary
-search, allowing repeated selections from the same set to be significantly
-faster, especially for large data sets.
-
-[1]: https://github.com/jmcvetta/randutil
+Randomly selects an element from some kind of list, where the chances of each
+element to be selected are not equal, but rather defined by relative "weights"
+(or probabilities). This is called weighted random selection.
 
 ## Usage
 
@@ -44,8 +38,17 @@ func main() {
 ```
 
 ## Benchmarks
-Comparison of this library versus `randutil.ChooseWeighted`. For large numbers
-of samplings from large collections, `weightedrand` will be quicker.
+
+The existing Go library that has a comparable implementation of this is
+[`github.com/jmcvetta/randutil`][1], which optimizes for the single operation
+case. In contrast, this library creates a presorted cache optimized for binary
+search, allowing repeated selections from the same set to be significantly
+faster, especially for large data sets.
+
+[1]: https://github.com/jmcvetta/randutil
+
+Comparison of this library versus `randutil.ChooseWeighted`. For repeated
+samplings from large collections, `weightedrand` will be much quicker.
 
 | Num choices |    `randutil` | `weightedrand` |
 | ----------: | ------------: | -------------: |
@@ -61,15 +64,16 @@ right choice! If you are only picking from the same distribution once,
 `randutil` will be faster. `weightedrand` optimizes for repeated calls at the
 expense of some setup time and memory storage.
 
+*Update: Starting in `v0.3.0` weightedrand can now scale linearly to take
+advantage of multiple CPU cores in parallel, making it even faster. See
+[PR#2](https://github.com/mroth/weightedrand/pull/2) for details.*
+
 ## Caveats
 
 Note this uses `math/rand` instead of `crypto/rand`, as it is optimized for
-performance, not cryptographically secure implementation.
-
-Relies on global rand for determinism, therefore, don't forget to seed random!
+performance, not a cryptographically secure implementation.
 
 ## Credits
 
-The algorithm used in this library (as well as the one used in randutil) comes
-from:
-https://eli.thegreenplace.net/2010/01/22/weighted-random-generation-in-python/
+To better understand the algorithm used in this library (as well as the one used
+in randutil) check out this great blog post: [Weighted random generation in Python](https://eli.thegreenplace.net/2010/01/22/weighted-random-generation-in-python/).
