@@ -23,7 +23,7 @@ func main() {
     rand.Seed(time.Now().UTC().UnixNano()) // always seed random!
 
     c := wr.NewChooser(
-        wr.Choice{Item: "🍒", Weight: 0}, // alternatively: wr.NewChoice('🍒', 0)
+        wr.Choice{Item: "🍒", Weight: 0},
         wr.Choice{Item: "🍋", Weight: 1},
         wr.Choice{Item: "🍊", Weight: 1},
         wr.Choice{Item: "🍉", Weight: 3},
