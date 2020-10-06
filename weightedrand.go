@@ -54,7 +54,7 @@ func NewChooser(cs ...Choice) Chooser {
 // seed it.
 func (chs Chooser) Pick() interface{} {
 	r := rand.Intn(chs.max) + 1
-	i := sort.SearchInts(chs.totals, r)
+	i := searchInts(chs.totals, r)
 	return chs.data[i].Item
 }
 
@@ -69,6 +69,27 @@ func (chs Chooser) Pick() interface{} {
 // safe from thread safety issues.
 func (chs Chooser) PickSource(rs *rand.Rand) interface{} {
 	r := rs.Intn(chs.max) + 1
-	i := sort.SearchInts(chs.totals, r)
+	i := searchInts(chs.totals, r)
 	return chs.data[i].Item
+}
+
+// The standard library sort.SearchInts() just wraps the generic sort.Search()
+// function, which takes a function closure to determine truthfulness. However,
+// since this function is utilized within a for loop, it cannot currently be
+// properly inlined by the compiler, resulting in non-trivial performance
+// overhead.
+//
+// Thus, this is essentially manually inlined version.  In our use case here, it
+// results in a up to ~33% overall throughput increase for Pick().
+func searchInts(a []int, x int) int {
+	i, j := 0, len(a)
+	for i < j {
+		h := int(uint(i+j) >> 1) // avoid overflow when computing h
+		if a[h] < x {
+			i = h + 1
+		} else {
+			j = h
+		}
+	}
+	return i
 }
