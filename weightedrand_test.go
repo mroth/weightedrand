@@ -127,11 +127,11 @@ func verifyFrequencyCounts(t *testing.T, counts map[int]int, choices []Choice) {
 *	Benchmarks
 *******************************************************************************/
 
-const BMminChoices = 10
-const BMmaxChoices = 1000000
+const BMMinChoices = 10
+const BMMaxChoices = 1000000
 
 func BenchmarkNewChooser(b *testing.B) {
-	for n := BMminChoices; n <= BMmaxChoices; n *= 10 {
+	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
 		b.Run(strconv.Itoa(n), func(b *testing.B) {
 			choices := mockChoices(n)
 			b.ResetTimer()
@@ -144,7 +144,7 @@ func BenchmarkNewChooser(b *testing.B) {
 }
 
 func BenchmarkPick(b *testing.B) {
-	for n := BMminChoices; n <= BMmaxChoices; n *= 10 {
+	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
 		b.Run(strconv.Itoa(n), func(b *testing.B) {
 			choices := mockChoices(n)
 			chooser := NewChooser(choices...)
@@ -158,7 +158,7 @@ func BenchmarkPick(b *testing.B) {
 }
 
 func BenchmarkPickParallel(b *testing.B) {
-	for n := BMminChoices; n <= BMmaxChoices; n *= 10 {
+	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
 		b.Run(strconv.Itoa(n), func(b *testing.B) {
 			choices := mockChoices(n)
 			chooser := NewChooser(choices...)
@@ -176,34 +176,10 @@ func BenchmarkPickParallel(b *testing.B) {
 func mockChoices(n int) []Choice {
 	choices := make([]Choice, 0, n)
 	for i := 0; i < n; i++ {
-		s := "⚽️"
+		s := '🥑'
 		w := rand.Intn(10)
 		c := NewChoice(s, uint(w))
 		choices = append(choices, c)
 	}
 	return choices
 }
-
-// This following is a historic artifact from comparative benchmarking with
-// randutil, however it is not critical to ongoing development.
-
-// func BenchmarkRandutil(b *testing.B) {
-// 	if testing.Short() {
-// 		b.Skip()
-// 	}
-// 	for n := BMminChoices; n <= BMmaxChoices; n *= 10 {
-// 		b.Run(strconv.Itoa(n), func(b *testing.B) {
-// 			b.StopTimer()
-// 			choices := mockChoices(n)
-// 			choicesR := make([]randutil.Choice, len(choices), len(choices))
-// 			for i, c := range choices {
-// 				choicesR[i] = randutil.Choice{Weight: c.Weight, Item: c.Item}
-// 			}
-// 			b.StartTimer()
-
-// 			for i := 0; i < b.N; i++ {
-// 				randutil.WeightedChoice(choicesR)
-// 			}
-// 		})
-// 	}
-// }
