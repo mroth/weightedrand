@@ -13,7 +13,7 @@ import (
 )
 
 const BMMinChoices = 10
-const BMMaxChoices = 1000000
+const BMMaxChoices = 10_000_000
 
 func BenchmarkMultiple(b *testing.B) {
 	b.Run("jmc_randutil", func(b *testing.B) {
