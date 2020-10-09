@@ -82,6 +82,8 @@ func (chs Chooser) PickSource(rs *rand.Rand) interface{} {
 // Thus, this is essentially manually inlined version.  In our use case here, it
 // results in a up to ~33% overall throughput increase for Pick().
 func searchInts(a []int, x int) int {
+	// Possible further future optimization for searchInts via SIMD if we want
+	// to write some Go assembly code: http://0x80.pl/articles/simd-search.html
 	i, j := 0, len(a)
 	for i < j {
 		h := int(uint(i+j) >> 1) // avoid overflow when computing h
