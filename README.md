@@ -38,7 +38,7 @@ func main() {
 }
 ```
 
-## Benchmarks
+## Performance
 
 The existing Go library that has a comparable implementation of this is
 [`github.com/jmcvetta/randutil`][1], which optimizes for the single operation
@@ -48,31 +48,36 @@ faster, especially for large data sets.
 
 [1]: https://github.com/jmcvetta/randutil
 
-Comparison of this library versus `randutil.ChooseWeighted`. For repeated
-samplings from large collections, `weightedrand` will be much quicker.
+Comparison of this library versus `randutil.ChooseWeighted` on my workstation.
+For repeated samplings from large collections, `weightedrand` will be much
+quicker:
 
-| Num choices |    `randutil` | `weightedrand` |
-| ----------: | ------------: | -------------: |
-|          10 |     435 ns/op |       58 ns/op |
-|         100 |     511 ns/op |       84 ns/op |
-|       1,000 |    1297 ns/op |      112 ns/op |
-|      10,000 |    7952 ns/op |      137 ns/op |
-|     100,000 |   85142 ns/op |      173 ns/op |
-|   1,000,000 | 2082248 ns/op |      312 ns/op |
+| Num choices |     `randutil` | `weightedrand` | `weightedrand -cpu=8`* |
+| ----------: | -------------: | -------------: | ---------------------: |
+|          10 |      201 ns/op |       38 ns/op |              2.9 ns/op |
+|         100 |      267 ns/op |       51 ns/op |              4.1 ns/op |
+|       1,000 |     1012 ns/op |       67 ns/op |              5.4 ns/op |
+|      10,000 |     8683 ns/op |       83 ns/op |              6.9 ns/op |
+|     100,000 |   123500 ns/op |      105 ns/op |             12.0 ns/op |
+|   1,000,000 |  2399614 ns/op |      218 ns/op |             17.2 ns/op |
+|  10,000,000 | 26804440 ns/op |      432 ns/op |             35.1 ns/op |
+
+**: Since `v0.3.0` weightedrand can efficiently utilize a single Chooser across
+multiple CPU cores in parallel, making it even faster in overall throughput. See
+[PR#2](https://github.com/mroth/weightedrand/pull/2) for details. Informal
+benchmarks conducted on an Intel Xeon W-2140B CPU (8 core @ 3.2GHz,
+hyperthreading enabled).*
 
 Don't be mislead by these numbers into thinking `weightedrand` is always the
 right choice! If you are only picking from the same distribution once,
 `randutil` will be faster. `weightedrand` optimizes for repeated calls at the
-expense of some setup time and memory storage.
-
-*Update: Starting in `v0.3.0` weightedrand can now scale linearly to take
-advantage of multiple CPU cores in parallel, making it even faster. See
-[PR#2](https://github.com/mroth/weightedrand/pull/2) for details.*
+expense of some initialization time and memory storage.
 
 ## Caveats
 
-Note this uses `math/rand` instead of `crypto/rand`, as it is optimized for
-performance, not a cryptographically secure implementation.
+Note this library utilizes `math/rand` instead of `crypto/rand`, as it is
+optimized for performance, and is not intended to be used for cryptographically
+secure requirements.
 
 ## Credits
 
