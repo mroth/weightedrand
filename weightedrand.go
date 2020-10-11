@@ -66,7 +66,7 @@ func (chs Chooser) Pick() interface{} {
 // high-throughput situations.
 //
 // It is the responsibility of the caller to ensure the provided rand.Source is
-// safe from thread safety issues.
+// free from thread safety issues.
 func (chs Chooser) PickSource(rs *rand.Rand) interface{} {
 	r := rs.Intn(chs.max) + 1
 	i := searchInts(chs.totals, r)
