@@ -42,6 +42,43 @@ const (
 	testIterations = 1000000
 )
 
+func TestNewChooserChecked(t *testing.T) {
+	tests := []struct {
+		name    string
+		cs      []Choice
+		wantErr error
+	}{
+		{
+			name:    "zero choices",
+			cs:      []Choice{},
+			wantErr: ErrNoValidChoices,
+		},
+		{
+			name:    "no choices with positive weight",
+			cs:      []Choice{{Item: 'a', Weight: 0}, {Item: 'b', Weight: 0}},
+			wantErr: ErrNoValidChoices,
+		},
+		{
+			name:    "weight overflow",
+			cs:      []Choice{{Item: 'a', Weight: maxInt/2 + 1}, {Item: 'b', Weight: maxInt/2 + 1}},
+			wantErr: ErrWeightOverflow,
+		},
+		{
+			name:    "nominal case",
+			cs:      []Choice{{Item: 'a', Weight: 1}, {Item: 'b', Weight: 2}},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewChooserChecked(tt.cs...)
+			if err != tt.wantErr {
+				t.Errorf("NewChooserChecked() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 // TestChooser_Pick assembles a list of Choices, weighted 0-9, and tests that
 // over the course of 1,000,000 calls to Pick() each choice is returned more
 // often than choices with a lower weight.
