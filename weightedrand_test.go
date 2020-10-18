@@ -18,7 +18,7 @@ import (
 // not on any absolute scoring system. In this trivial case, we will assign a
 // weight of 0 to all but one fruit, so that the output will be predictable.
 func Example() {
-	chooser := NewChooser(
+	chooser, _ := NewChooser(
 		NewChoice('🍋', 0),
 		NewChoice('🍊', 0),
 		NewChoice('🍉', 0),
@@ -42,7 +42,7 @@ const (
 	testIterations = 1000000
 )
 
-func TestNewChooserChecked(t *testing.T) {
+func TestNewChooser(t *testing.T) {
 	tests := []struct {
 		name    string
 		cs      []Choice
@@ -71,9 +71,9 @@ func TestNewChooserChecked(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewChooserChecked(tt.cs...)
+			_, err := NewChooser(tt.cs...)
 			if err != tt.wantErr {
-				t.Errorf("NewChooserChecked() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NewChooser() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -84,7 +84,10 @@ func TestNewChooserChecked(t *testing.T) {
 // often than choices with a lower weight.
 func TestChooser_Pick(t *testing.T) {
 	choices := mockFrequencyChoices(t, testChoices)
-	chooser := NewChooser(choices...)
+	chooser, err := NewChooser(choices...)
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Log("totals in chooser", chooser.totals)
 
 	// run Pick() a million times, and record how often it returns each of the
@@ -104,7 +107,10 @@ func TestChooser_Pick(t *testing.T) {
 // randomness.
 func TestChooser_PickSource(t *testing.T) {
 	choices := mockFrequencyChoices(t, testChoices)
-	chooser := NewChooser(choices...)
+	chooser, err := NewChooser(choices...)
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Log("totals in chooser", chooser.totals)
 
 	counts1 := make(map[int]int)
@@ -174,7 +180,7 @@ func BenchmarkNewChooser(b *testing.B) {
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
-				_ = NewChooser(choices...)
+				_, _ = NewChooser(choices...)
 			}
 		})
 	}
@@ -184,7 +190,10 @@ func BenchmarkPick(b *testing.B) {
 	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
 		b.Run(strconv.Itoa(n), func(b *testing.B) {
 			choices := mockChoices(n)
-			chooser := NewChooser(choices...)
+			chooser, err := NewChooser(choices...)
+			if err != nil {
+				b.Fatal(err)
+			}
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
@@ -198,7 +207,10 @@ func BenchmarkPickParallel(b *testing.B) {
 	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
 		b.Run(strconv.Itoa(n), func(b *testing.B) {
 			choices := mockChoices(n)
-			chooser := NewChooser(choices...)
+			chooser, err := NewChooser(choices...)
+			if err != nil {
+				b.Fatal(err)
+			}
 			b.ResetTimer()
 			b.RunParallel(func(pb *testing.PB) {
 				rs := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))

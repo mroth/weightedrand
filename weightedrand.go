@@ -36,18 +36,7 @@ type Chooser struct {
 }
 
 // NewChooser initializes a new Chooser for picking from the provided Choices.
-func NewChooser(cs ...Choice) Chooser {
-	res, err := NewChooserChecked(cs...)
-	if err != nil {
-		panic(err)
-	}
-	return *res
-}
-
-// NewChooserChecked initializes a new Chooser for picking from the provided
-// Choices, but will explicitly error in situations where an unsafe Chooser
-// might be produced.
-func NewChooserChecked(cs ...Choice) (*Chooser, error) {
+func NewChooser(cs ...Choice) (*Chooser, error) {
 	sort.Slice(cs, func(i, j int) bool {
 		return cs[i].Weight < cs[j].Weight
 	})
@@ -75,8 +64,8 @@ const (
 	maxInt  = 1<<(intSize-1) - 1
 )
 
-// Possible errors returned by NewChooserChecked, preventing the creation of
-// a Chooser with unsafe runtime states.
+// Possible errors returned by NewChooser, preventing the creation of a Chooser
+// with unsafe runtime states.
 var (
 	// If the sum of provided Choice weights exceed the maximum integer value
 	// for the current platform (e.g. math.MaxInt32 or math.MaxInt64), then

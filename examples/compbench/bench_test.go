@@ -32,7 +32,10 @@ func BenchmarkMultiple(b *testing.B) {
 		for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
 			b.Run(strconv.Itoa(n), func(b *testing.B) {
 				choices := mockChoices(b, n)
-				chs := weightedrand.NewChooser(choices...)
+				chs, err := weightedrand.NewChooser(choices...)
+				if err != nil {
+					b.Fatal(err)
+				}
 				b.ResetTimer()
 				for i := 0; i < b.N; i++ {
 					chs.Pick()
@@ -45,7 +48,10 @@ func BenchmarkMultiple(b *testing.B) {
 		for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
 			b.Run(strconv.Itoa(n), func(b *testing.B) {
 				choices := mockChoices(b, n)
-				chs := weightedrand.NewChooser(choices...)
+				chs, err := weightedrand.NewChooser(choices...)
+				if err != nil {
+					b.Fatal(err)
+				}
 				b.ResetTimer()
 				b.RunParallel(func(pb *testing.PB) {
 					rs := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
@@ -84,7 +90,7 @@ func BenchmarkSingle(b *testing.B) {
 				choices := mockChoices(b, n)
 				b.ResetTimer()
 				for i := 0; i < b.N; i++ {
-					chs := weightedrand.NewChooser(choices...)
+					chs, _ := weightedrand.NewChooser(choices...)
 					chs.Pick()
 				}
 			})
