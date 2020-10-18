@@ -35,15 +35,15 @@ type Chooser struct {
 	max    int
 }
 
-// NewChooser initializes a new Chooser for picking from the provided Choices.
-func NewChooser(cs ...Choice) (*Chooser, error) {
-	sort.Slice(cs, func(i, j int) bool {
-		return cs[i].Weight < cs[j].Weight
+// NewChooser initializes a new Chooser for picking from the provided choices.
+func NewChooser(choices ...Choice) (*Chooser, error) {
+	sort.Slice(choices, func(i, j int) bool {
+		return choices[i].Weight < choices[j].Weight
 	})
 
-	totals := make([]int, len(cs))
+	totals := make([]int, len(choices))
 	runningTotal := 0
-	for i, c := range cs {
+	for i, c := range choices {
 		weight := int(c.Weight)
 		if (maxInt - runningTotal) <= weight {
 			return nil, errWeightOverflow
@@ -56,7 +56,7 @@ func NewChooser(cs ...Choice) (*Chooser, error) {
 		return nil, errNoValidChoices
 	}
 
-	return &Chooser{data: cs, totals: totals, max: runningTotal}, nil
+	return &Chooser{data: choices, totals: totals, max: runningTotal}, nil
 }
 
 const (
@@ -79,12 +79,11 @@ var (
 
 // Pick returns a single weighted random Choice.Item from the Chooser.
 //
-// Utilizes global rand as the source of randomness -- you will likely want to
-// seed it.
-func (chs Chooser) Pick() interface{} {
-	r := rand.Intn(chs.max) + 1
-	i := searchInts(chs.totals, r)
-	return chs.data[i].Item
+// Utilizes global rand as the source of randomness.
+func (c Chooser) Pick() interface{} {
+	r := rand.Intn(c.max) + 1
+	i := searchInts(c.totals, r)
+	return c.data[i].Item
 }
 
 // PickSource returns a single weighted random Choice.Item from the Chooser,
@@ -96,10 +95,10 @@ func (chs Chooser) Pick() interface{} {
 //
 // It is the responsibility of the caller to ensure the provided rand.Source is
 // free from thread safety issues.
-func (chs Chooser) PickSource(rs *rand.Rand) interface{} {
-	r := rs.Intn(chs.max) + 1
-	i := searchInts(chs.totals, r)
-	return chs.data[i].Item
+func (c Chooser) PickSource(rs *rand.Rand) interface{} {
+	r := rs.Intn(c.max) + 1
+	i := searchInts(c.totals, r)
+	return c.data[i].Item
 }
 
 // The standard library sort.SearchInts() just wraps the generic sort.Search()
