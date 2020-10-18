@@ -51,17 +51,17 @@ func TestNewChooser(t *testing.T) {
 		{
 			name:    "zero choices",
 			cs:      []Choice{},
-			wantErr: ErrNoValidChoices,
+			wantErr: errNoValidChoices,
 		},
 		{
 			name:    "no choices with positive weight",
 			cs:      []Choice{{Item: 'a', Weight: 0}, {Item: 'b', Weight: 0}},
-			wantErr: ErrNoValidChoices,
+			wantErr: errNoValidChoices,
 		},
 		{
 			name:    "weight overflow",
 			cs:      []Choice{{Item: 'a', Weight: maxInt/2 + 1}, {Item: 'b', Weight: maxInt/2 + 1}},
-			wantErr: ErrWeightOverflow,
+			wantErr: errWeightOverflow,
 		},
 		{
 			name:    "nominal case",

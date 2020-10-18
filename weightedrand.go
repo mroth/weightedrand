@@ -46,14 +46,14 @@ func NewChooser(cs ...Choice) (*Chooser, error) {
 	for i, c := range cs {
 		weight := int(c.Weight)
 		if (maxInt - runningTotal) <= weight {
-			return nil, ErrWeightOverflow
+			return nil, errWeightOverflow
 		}
 		runningTotal += weight
 		totals[i] = runningTotal
 	}
 
 	if runningTotal <= 1 {
-		return nil, ErrNoValidChoices
+		return nil, errNoValidChoices
 	}
 
 	return &Chooser{data: cs, totals: totals, max: runningTotal}, nil
@@ -71,10 +71,10 @@ var (
 	// for the current platform (e.g. math.MaxInt32 or math.MaxInt64), then
 	// the internal running total will overflow, resulting in an imbalanced
 	// distribution generating improper results.
-	ErrWeightOverflow = errors.New("sum of Choice Weights exceeds max int")
+	errWeightOverflow = errors.New("sum of Choice Weights exceeds max int")
 	// If there are no Choices available to the Chooser with a weight >= 1,
 	// there are no valid choices and Pick would produce a runtime panic.
-	ErrNoValidChoices = errors.New("zero Choices with Weight >= 1")
+	errNoValidChoices = errors.New("zero Choices with Weight >= 1")
 )
 
 // Pick returns a single weighted random Choice.Item from the Chooser.
