@@ -11,6 +11,7 @@
 package weightedrand
 
 import (
+	"errors"
 	"math/rand"
 	"sort"
 )
@@ -34,28 +35,55 @@ type Chooser struct {
 	max    int
 }
 
-// NewChooser initializes a new Chooser for picking from the provided Choices.
-func NewChooser(cs ...Choice) Chooser {
-	sort.Slice(cs, func(i, j int) bool {
-		return cs[i].Weight < cs[j].Weight
+// NewChooser initializes a new Chooser for picking from the provided choices.
+func NewChooser(choices ...Choice) (*Chooser, error) {
+	sort.Slice(choices, func(i, j int) bool {
+		return choices[i].Weight < choices[j].Weight
 	})
-	totals := make([]int, len(cs))
+
+	totals := make([]int, len(choices))
 	runningTotal := 0
-	for i, c := range cs {
-		runningTotal += int(c.Weight)
+	for i, c := range choices {
+		weight := int(c.Weight)
+		if (maxInt - runningTotal) <= weight {
+			return nil, errWeightOverflow
+		}
+		runningTotal += weight
 		totals[i] = runningTotal
 	}
-	return Chooser{data: cs, totals: totals, max: runningTotal}
+
+	if runningTotal <= 1 {
+		return nil, errNoValidChoices
+	}
+
+	return &Chooser{data: choices, totals: totals, max: runningTotal}, nil
 }
+
+const (
+	intSize = 32 << (^uint(0) >> 63) // cf. strconv.IntSize
+	maxInt  = 1<<(intSize-1) - 1
+)
+
+// Possible errors returned by NewChooser, preventing the creation of a Chooser
+// with unsafe runtime states.
+var (
+	// If the sum of provided Choice weights exceed the maximum integer value
+	// for the current platform (e.g. math.MaxInt32 or math.MaxInt64), then
+	// the internal running total will overflow, resulting in an imbalanced
+	// distribution generating improper results.
+	errWeightOverflow = errors.New("sum of Choice Weights exceeds max int")
+	// If there are no Choices available to the Chooser with a weight >= 1,
+	// there are no valid choices and Pick would produce a runtime panic.
+	errNoValidChoices = errors.New("zero Choices with Weight >= 1")
+)
 
 // Pick returns a single weighted random Choice.Item from the Chooser.
 //
-// Utilizes global rand as the source of randomness -- you will likely want to
-// seed it.
-func (chs Chooser) Pick() interface{} {
-	r := rand.Intn(chs.max) + 1
-	i := searchInts(chs.totals, r)
-	return chs.data[i].Item
+// Utilizes global rand as the source of randomness.
+func (c Chooser) Pick() interface{} {
+	r := rand.Intn(c.max) + 1
+	i := searchInts(c.totals, r)
+	return c.data[i].Item
 }
 
 // PickSource returns a single weighted random Choice.Item from the Chooser,
@@ -67,10 +95,10 @@ func (chs Chooser) Pick() interface{} {
 //
 // It is the responsibility of the caller to ensure the provided rand.Source is
 // free from thread safety issues.
-func (chs Chooser) PickSource(rs *rand.Rand) interface{} {
-	r := rs.Intn(chs.max) + 1
-	i := searchInts(chs.totals, r)
-	return chs.data[i].Item
+func (c Chooser) PickSource(rs *rand.Rand) interface{} {
+	r := rs.Intn(c.max) + 1
+	i := searchInts(c.totals, r)
+	return c.data[i].Item
 }
 
 // The standard library sort.SearchInts() just wraps the generic sort.Search()

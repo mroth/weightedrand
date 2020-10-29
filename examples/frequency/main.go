@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -11,13 +12,16 @@ import (
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano()) // always seed random!
 
-	c := wr.NewChooser(
+	c, err := wr.NewChooser(
 		wr.Choice{Item: '🍒', Weight: 0}, // alternatively: wr.NewChoice('🍒', 0)
 		wr.Choice{Item: '🍋', Weight: 1},
 		wr.Choice{Item: '🍊', Weight: 1},
 		wr.Choice{Item: '🍉', Weight: 3},
 		wr.Choice{Item: '🥑', Weight: 5},
 	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	/* Let's pick a bunch of fruits so we can see the distribution in action! */
 	fruits := make([]rune, 40*18)
