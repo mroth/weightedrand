@@ -1,5 +1,8 @@
 # weightedrand :balance_scale:
 
+<img src="docs/gopher_scales_300px.png" width="150" align="right"
+    alt="cartoon gopher made via gopherize.me, original source artwork: ashley mcnamara">
+
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/mroth/weightedrand)](https://pkg.go.dev/github.com/mroth/weightedrand)
 [![CodeFactor](https://www.codefactor.io/repository/github/mroth/weightedrand/badge)](https://www.codefactor.io/repository/github/mroth/weightedrand)
 [![Build Status](https://github.com/mroth/weightedrand/workflows/test/badge.svg)](https://github.com/mroth/weightedrand/actions)
