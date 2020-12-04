@@ -59,6 +59,11 @@ func TestNewChooser(t *testing.T) {
 			wantErr: errNoValidChoices,
 		},
 		{
+			name:    "choice with weight equals 1",
+			cs:      []Choice{{Item: 'a', Weight: 1}},
+			wantErr: nil,
+		},
+		{
 			name:    "weight overflow",
 			cs:      []Choice{{Item: 'a', Weight: maxInt/2 + 1}, {Item: 'b', Weight: maxInt/2 + 1}},
 			wantErr: errWeightOverflow,
