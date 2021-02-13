@@ -13,6 +13,7 @@ jobs:
           - "1.13"
           - "1.14"
           - "1.15"
+          - "1.16"
     name: Go ${{ matrix.go }} test
     steps:
       - uses: actions/checkout@v2
