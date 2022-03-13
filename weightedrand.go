@@ -17,26 +17,26 @@ import (
 )
 
 // Choice is a generic wrapper that can be used to add weights for any item.
-type Choice struct {
-	Item   interface{}
+type Choice[T any] struct {
+	Item   T
 	Weight uint
 }
 
 // NewChoice creates a new Choice with specified item and weight.
-func NewChoice(item interface{}, weight uint) Choice {
-	return Choice{Item: item, Weight: weight}
+func NewChoice[T any](item T, weight uint) Choice[T] {
+	return Choice[T]{Item: item, Weight: weight}
 }
 
 // A Chooser caches many possible Choices in a structure designed to improve
 // performance on repeated calls for weighted random selection.
-type Chooser struct {
-	data   []Choice
+type Chooser[T any] struct {
+	data   []Choice[T]
 	totals []int
 	max    int
 }
 
 // NewChooser initializes a new Chooser for picking from the provided choices.
-func NewChooser(choices ...Choice) (*Chooser, error) {
+func NewChooser[T any](choices ...Choice[T]) (*Chooser[T], error) {
 	sort.Slice(choices, func(i, j int) bool {
 		return choices[i].Weight < choices[j].Weight
 	})
@@ -56,7 +56,7 @@ func NewChooser(choices ...Choice) (*Chooser, error) {
 		return nil, errNoValidChoices
 	}
 
-	return &Chooser{data: choices, totals: totals, max: runningTotal}, nil
+	return &Chooser[T]{data: choices, totals: totals, max: runningTotal}, nil
 }
 
 const (
@@ -80,7 +80,7 @@ var (
 // Pick returns a single weighted random Choice.Item from the Chooser.
 //
 // Utilizes global rand as the source of randomness.
-func (c Chooser) Pick() interface{} {
+func (c Chooser[T]) Pick() T {
 	r := rand.Intn(c.max) + 1
 	i := searchInts(c.totals, r)
 	return c.data[i].Item
@@ -95,7 +95,7 @@ func (c Chooser) Pick() interface{} {
 //
 // It is the responsibility of the caller to ensure the provided rand.Source is
 // free from thread safety issues.
-func (c Chooser) PickSource(rs *rand.Rand) interface{} {
+func (c Chooser[T]) PickSource(rs *rand.Rand) T {
 	r := rs.Intn(c.max) + 1
 	i := searchInts(c.totals, r)
 	return c.data[i].Item

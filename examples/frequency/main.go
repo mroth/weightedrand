@@ -6,18 +6,18 @@ import (
 	"math/rand"
 	"time"
 
-	wr "github.com/mroth/weightedrand"
+	"github.com/mroth/weightedrand"
 )
 
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano()) // always seed random!
 
-	c, err := wr.NewChooser(
-		wr.Choice{Item: '🍒', Weight: 0}, // alternatively: wr.NewChoice('🍒', 0)
-		wr.Choice{Item: '🍋', Weight: 1},
-		wr.Choice{Item: '🍊', Weight: 1},
-		wr.Choice{Item: '🍉', Weight: 3},
-		wr.Choice{Item: '🥑', Weight: 5},
+	c, err := weightedrand.NewChooser(
+		weightedrand.NewChoice('🍒', 0),
+		weightedrand.NewChoice('🍋', 1),
+		weightedrand.NewChoice('🍊', 1),
+		weightedrand.NewChoice('🍉', 3),
+		weightedrand.NewChoice('🥑', 5),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -26,7 +26,7 @@ func main() {
 	/* Let's pick a bunch of fruits so we can see the distribution in action! */
 	fruits := make([]rune, 40*18)
 	for i := 0; i < len(fruits); i++ {
-		fruits[i] = c.Pick().(rune)
+		fruits[i] = c.Pick()
 	}
 	fmt.Println(string(fruits))
 

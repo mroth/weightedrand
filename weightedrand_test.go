@@ -24,7 +24,7 @@ func Example() {
 		NewChoice('🍉', 0),
 		NewChoice('🥑', 42),
 	)
-	fruit := chooser.Pick().(rune)
+	fruit := chooser.Pick()
 	fmt.Printf("%c", fruit)
 	//Output: 🥑
 }
@@ -45,32 +45,32 @@ const (
 func TestNewChooser(t *testing.T) {
 	tests := []struct {
 		name    string
-		cs      []Choice
+		cs      []Choice[rune]
 		wantErr error
 	}{
 		{
 			name:    "zero choices",
-			cs:      []Choice{},
+			cs:      []Choice[rune]{},
 			wantErr: errNoValidChoices,
 		},
 		{
 			name:    "no choices with positive weight",
-			cs:      []Choice{{Item: 'a', Weight: 0}, {Item: 'b', Weight: 0}},
+			cs:      []Choice[rune]{{Item: 'a', Weight: 0}, {Item: 'b', Weight: 0}},
 			wantErr: errNoValidChoices,
 		},
 		{
 			name:    "choice with weight equals 1",
-			cs:      []Choice{{Item: 'a', Weight: 1}},
+			cs:      []Choice[rune]{{Item: 'a', Weight: 1}},
 			wantErr: nil,
 		},
 		{
 			name:    "weight overflow",
-			cs:      []Choice{{Item: 'a', Weight: maxInt/2 + 1}, {Item: 'b', Weight: maxInt/2 + 1}},
+			cs:      []Choice[rune]{{Item: 'a', Weight: maxInt/2 + 1}, {Item: 'b', Weight: maxInt/2 + 1}},
 			wantErr: errWeightOverflow,
 		},
 		{
 			name:    "nominal case",
-			cs:      []Choice{{Item: 'a', Weight: 1}, {Item: 'b', Weight: 2}},
+			cs:      []Choice[rune]{{Item: 'a', Weight: 1}, {Item: 'b', Weight: 2}},
 			wantErr: nil,
 		},
 	}
@@ -100,7 +100,7 @@ func TestChooser_Pick(t *testing.T) {
 	counts := make(map[int]int)
 	for i := 0; i < testIterations; i++ {
 		c := chooser.Pick()
-		counts[c.(int)]++
+		counts[c]++
 	}
 
 	verifyFrequencyCounts(t, counts, choices)
@@ -127,7 +127,7 @@ func TestChooser_PickSource(t *testing.T) {
 		rs := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 		for i := 0; i < testIterations/2; i++ {
 			c := chooser.PickSource(rs)
-			counts[c.(int)]++
+			counts[c]++
 		}
 	}
 	go checker(counts1)
@@ -140,9 +140,9 @@ func TestChooser_PickSource(t *testing.T) {
 
 // Similar to what is used in randutil test, but in randomized order to avoid
 // any issues with algorithms that are accidentally dependant on presorted data.
-func mockFrequencyChoices(t *testing.T, n int) []Choice {
+func mockFrequencyChoices(t *testing.T, n int) []Choice[int] {
 	t.Helper()
-	choices := make([]Choice, 0, n)
+	choices := make([]Choice[int], 0, n)
 	list := rand.Perm(n)
 	for _, v := range list {
 		c := NewChoice(v, uint(v))
@@ -152,7 +152,7 @@ func mockFrequencyChoices(t *testing.T, n int) []Choice {
 	return choices
 }
 
-func verifyFrequencyCounts(t *testing.T, counts map[int]int, choices []Choice) {
+func verifyFrequencyCounts(t *testing.T, counts map[int]int, choices []Choice[int]) {
 	t.Helper()
 
 	// Ensure weight 0 results in no results
@@ -202,7 +202,7 @@ func BenchmarkPick(b *testing.B) {
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
-				_ = chooser.Pick().(rune)
+				_ = chooser.Pick()
 			}
 		})
 	}
@@ -220,15 +220,15 @@ func BenchmarkPickParallel(b *testing.B) {
 			b.RunParallel(func(pb *testing.PB) {
 				rs := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 				for pb.Next() {
-					_ = chooser.PickSource(rs).(rune)
+					_ = chooser.PickSource(rs)
 				}
 			})
 		})
 	}
 }
 
-func mockChoices(n int) []Choice {
-	choices := make([]Choice, 0, n)
+func mockChoices(n int) []Choice[rune] {
+	choices := make([]Choice[rune], 0, n)
 	for i := 0; i < n; i++ {
 		s := '🥑'
 		w := rand.Intn(10)
