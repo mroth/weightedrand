@@ -202,7 +202,7 @@ func BenchmarkPick(b *testing.B) {
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
-				chooser.Pick()
+				_ = chooser.Pick().(rune)
 			}
 		})
 	}
@@ -220,7 +220,7 @@ func BenchmarkPickParallel(b *testing.B) {
 			b.RunParallel(func(pb *testing.PB) {
 				rs := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 				for pb.Next() {
-					chooser.PickSource(rs)
+					_ = chooser.PickSource(rs).(rune)
 				}
 			})
 		})
