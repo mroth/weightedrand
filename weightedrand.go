@@ -17,26 +17,30 @@ import (
 )
 
 // Choice is a generic wrapper that can be used to add weights for any item.
-type Choice[T any] struct {
+type Choice[T any, W Integer] struct {
 	Item   T
-	Weight uint
+	Weight W
+}
+
+type Integer interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }
 
 // NewChoice creates a new Choice with specified item and weight.
-func NewChoice[T any](item T, weight uint) Choice[T] {
-	return Choice[T]{Item: item, Weight: weight}
+func NewChoice[T any, W Integer](item T, weight W) Choice[T, W] {
+	return Choice[T, W]{Item: item, Weight: weight}
 }
 
 // A Chooser caches many possible Choices in a structure designed to improve
 // performance on repeated calls for weighted random selection.
-type Chooser[T any] struct {
-	data   []Choice[T]
+type Chooser[T any, W Integer] struct {
+	data   []Choice[T, W]
 	totals []int
 	max    int
 }
 
 // NewChooser initializes a new Chooser for picking from the provided choices.
-func NewChooser[T any](choices ...Choice[T]) (*Chooser[T], error) {
+func NewChooser[T any, W Integer](choices ...Choice[T, W]) (*Chooser[T, W], error) {
 	sort.Slice(choices, func(i, j int) bool {
 		return choices[i].Weight < choices[j].Weight
 	})
@@ -45,6 +49,10 @@ func NewChooser[T any](choices ...Choice[T]) (*Chooser[T], error) {
 	runningTotal := 0
 	for i, c := range choices {
 		weight := int(c.Weight)
+		if weight < 0 {
+			continue // ignore negative weights, can never be picked
+		}
+
 		if (maxInt - runningTotal) <= weight {
 			return nil, errWeightOverflow
 		}
@@ -56,7 +64,7 @@ func NewChooser[T any](choices ...Choice[T]) (*Chooser[T], error) {
 		return nil, errNoValidChoices
 	}
 
-	return &Chooser[T]{data: choices, totals: totals, max: runningTotal}, nil
+	return &Chooser[T, W]{data: choices, totals: totals, max: runningTotal}, nil
 }
 
 const (
@@ -80,7 +88,7 @@ var (
 // Pick returns a single weighted random Choice.Item from the Chooser.
 //
 // Utilizes global rand as the source of randomness.
-func (c Chooser[T]) Pick() T {
+func (c Chooser[T, W]) Pick() T {
 	r := rand.Intn(c.max) + 1
 	i := searchInts(c.totals, r)
 	return c.data[i].Item
@@ -95,7 +103,7 @@ func (c Chooser[T]) Pick() T {
 //
 // It is the responsibility of the caller to ensure the provided rand.Source is
 // free from thread safety issues.
-func (c Chooser[T]) PickSource(rs *rand.Rand) T {
+func (c Chooser[T, W]) PickSource(rs *rand.Rand) T {
 	r := rs.Intn(c.max) + 1
 	i := searchInts(c.totals, r)
 	return c.data[i].Item

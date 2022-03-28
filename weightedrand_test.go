@@ -45,32 +45,37 @@ const (
 func TestNewChooser(t *testing.T) {
 	tests := []struct {
 		name    string
-		cs      []Choice[rune]
+		cs      []Choice[rune, int]
 		wantErr error
 	}{
 		{
 			name:    "zero choices",
-			cs:      []Choice[rune]{},
+			cs:      []Choice[rune, int]{},
 			wantErr: errNoValidChoices,
 		},
 		{
 			name:    "no choices with positive weight",
-			cs:      []Choice[rune]{{Item: 'a', Weight: 0}, {Item: 'b', Weight: 0}},
+			cs:      []Choice[rune, int]{{Item: 'a', Weight: 0}, {Item: 'b', Weight: 0}},
 			wantErr: errNoValidChoices,
 		},
 		{
 			name:    "choice with weight equals 1",
-			cs:      []Choice[rune]{{Item: 'a', Weight: 1}},
+			cs:      []Choice[rune, int]{{Item: 'a', Weight: 1}},
 			wantErr: nil,
 		},
 		{
 			name:    "weight overflow",
-			cs:      []Choice[rune]{{Item: 'a', Weight: maxInt/2 + 1}, {Item: 'b', Weight: maxInt/2 + 1}},
+			cs:      []Choice[rune, int]{{Item: 'a', Weight: maxInt/2 + 1}, {Item: 'b', Weight: maxInt/2 + 1}},
 			wantErr: errWeightOverflow,
 		},
 		{
 			name:    "nominal case",
-			cs:      []Choice[rune]{{Item: 'a', Weight: 1}, {Item: 'b', Weight: 2}},
+			cs:      []Choice[rune, int]{{Item: 'a', Weight: 1}, {Item: 'b', Weight: 2}},
+			wantErr: nil,
+		},
+		{
+			name:    "negative weight case",
+			cs:      []Choice[rune, int]{{Item: 'a', Weight: 3}, {Item: 'b', Weight: -2}},
 			wantErr: nil,
 		},
 	}
@@ -140,19 +145,19 @@ func TestChooser_PickSource(t *testing.T) {
 
 // Similar to what is used in randutil test, but in randomized order to avoid
 // any issues with algorithms that are accidentally dependant on presorted data.
-func mockFrequencyChoices(t *testing.T, n int) []Choice[int] {
+func mockFrequencyChoices(t *testing.T, n int) []Choice[int, int] {
 	t.Helper()
-	choices := make([]Choice[int], 0, n)
+	choices := make([]Choice[int, int], 0, n)
 	list := rand.Perm(n)
 	for _, v := range list {
-		c := NewChoice(v, uint(v))
+		c := NewChoice(v, v)
 		choices = append(choices, c)
 	}
 	t.Log("mocked choices of", choices)
 	return choices
 }
 
-func verifyFrequencyCounts(t *testing.T, counts map[int]int, choices []Choice[int]) {
+func verifyFrequencyCounts(t *testing.T, counts map[int]int, choices []Choice[int, int]) {
 	t.Helper()
 
 	// Ensure weight 0 results in no results
@@ -227,12 +232,12 @@ func BenchmarkPickParallel(b *testing.B) {
 	}
 }
 
-func mockChoices(n int) []Choice[rune] {
-	choices := make([]Choice[rune], 0, n)
+func mockChoices(n int) []Choice[rune, int] {
+	choices := make([]Choice[rune, int], 0, n)
 	for i := 0; i < n; i++ {
 		s := '🥑'
 		w := rand.Intn(10)
-		c := NewChoice(s, uint(w))
+		c := NewChoice(s, w)
 		choices = append(choices, c)
 	}
 	return choices
