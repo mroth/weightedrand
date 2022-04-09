@@ -17,30 +17,30 @@ import (
 )
 
 // Choice is a generic wrapper that can be used to add weights for any item.
-type Choice[T any, W Integer] struct {
+type Choice[T any, W integer] struct {
 	Item   T
 	Weight W
 }
 
-type Integer interface {
+type integer interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }
 
 // NewChoice creates a new Choice with specified item and weight.
-func NewChoice[T any, W Integer](item T, weight W) Choice[T, W] {
+func NewChoice[T any, W integer](item T, weight W) Choice[T, W] {
 	return Choice[T, W]{Item: item, Weight: weight}
 }
 
 // A Chooser caches many possible Choices in a structure designed to improve
 // performance on repeated calls for weighted random selection.
-type Chooser[T any, W Integer] struct {
+type Chooser[T any, W integer] struct {
 	data   []Choice[T, W]
 	totals []int
 	max    int
 }
 
 // NewChooser initializes a new Chooser for picking from the provided choices.
-func NewChooser[T any, W Integer](choices ...Choice[T, W]) (*Chooser[T, W], error) {
+func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], error) {
 	sort.Slice(choices, func(i, j int) bool {
 		return choices[i].Weight < choices[j].Weight
 	})
