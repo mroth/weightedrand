@@ -73,12 +73,6 @@ right choice! If you are only picking from the same distribution once,
 `randutil` will be faster. `weightedrand` optimizes for repeated calls at the
 expense of some initialization time and memory storage.
 
-## Caveats
-
-Note this library utilizes `math/rand` instead of `crypto/rand`, as it is
-optimized for performance, and is not intended to be used for cryptographically
-secure requirements.
-
 ## Credits
 
 To better understand the algorithm used in this library (as well as the one used
