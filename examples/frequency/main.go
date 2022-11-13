@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/mroth/weightedrand"
+	"github.com/mroth/weightedrand/v2"
 )
 
 func main() {

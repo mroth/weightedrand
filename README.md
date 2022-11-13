@@ -16,7 +16,7 @@ element to be selected are not equal, but rather defined by relative "weights"
 ```go
 import (
     /* ...snip... */
-    "github.com/mroth/weightedrand"
+    "github.com/mroth/weightedrand/v2"
 )
 
 func main() {
@@ -72,6 +72,11 @@ Don't be mislead by these numbers into thinking `weightedrand` is always the
 right choice! If you are only picking from the same distribution once,
 `randutil` will be faster. `weightedrand` optimizes for repeated calls at the
 expense of some initialization time and memory storage.
+
+## Requirements
+
+weightedrand >= v2 requires go1.18 or greater. For support on earlier versions
+of go, use weightedrand [v1](https://github.com/mroth/weightedrand/tree/v1).
 
 ## Credits
 

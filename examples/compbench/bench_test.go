@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jmcvetta/randutil"
-	"github.com/mroth/weightedrand"
+	"github.com/mroth/weightedrand/v2"
 )
 
 const BMMinChoices = 10
@@ -98,9 +98,9 @@ func BenchmarkSingle(b *testing.B) {
 	})
 }
 
-func mockChoices(tb testing.TB, n int) []weightedrand.Choice {
+func mockChoices(tb testing.TB, n int) []weightedrand.Choice[rune, uint] {
 	tb.Helper()
-	choices := make([]weightedrand.Choice, 0, n)
+	choices := make([]weightedrand.Choice[rune, uint], 0, n)
 	for i := 0; i < n; i++ {
 		s := '🥑'
 		w := rand.Intn(10)
@@ -110,7 +110,7 @@ func mockChoices(tb testing.TB, n int) []weightedrand.Choice {
 	return choices
 }
 
-func convertChoices(tb testing.TB, cs []weightedrand.Choice) []randutil.Choice {
+func convertChoices(tb testing.TB, cs []weightedrand.Choice[rune, uint]) []randutil.Choice {
 	tb.Helper()
 	res := make([]randutil.Choice, len(cs))
 	for i, c := range cs {
