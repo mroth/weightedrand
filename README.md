@@ -16,24 +16,24 @@ element to be selected are not equal, but rather defined by relative "weights"
 ```go
 import (
     /* ...snip... */
-    wr "github.com/mroth/weightedrand"
+    "github.com/mroth/weightedrand/v2"
 )
 
 func main() {
     rand.Seed(time.Now().UTC().UnixNano()) // always seed random!
 
-    chooser, _ := wr.NewChooser(
-        wr.Choice{Item: "🍒", Weight: 0},
-        wr.Choice{Item: "🍋", Weight: 1},
-        wr.Choice{Item: "🍊", Weight: 1},
-        wr.Choice{Item: "🍉", Weight: 3},
-        wr.Choice{Item: "🥑", Weight: 5},
+    chooser, _ := weightedrand.NewChooser(
+        weightedrand.NewChoice('🍒', 0),
+        weightedrand.NewChoice('🍋', 1),
+        weightedrand.NewChoice('🍊', 1),
+        weightedrand.NewChoice('🍉', 3),
+        weightedrand.NewChoice('🥑', 5),
     )
-    /* The following will print 🍋 and 🍊 with 0.1 probability, 🍉 with 0.3
-    probability, and 🥑 with 0.5 probability. 🍒 will never be printed. (Note
-    the weights don't have to add up to 10, that was just done here to make the
-    example easier to read.) */
-    result := chooser.Pick().(string)
+    // The following will print 🍋 and 🍊 with 0.1 probability, 🍉 with 0.3
+    // probability, and 🥑 with 0.5 probability. 🍒 will never be printed. (Note
+    // the weights don't have to add up to 10, that was just done here to make
+    // the example easier to read.)
+    result := chooser.Pick()
     fmt.Println(result)
 }
 ```
@@ -72,6 +72,11 @@ Don't be mislead by these numbers into thinking `weightedrand` is always the
 right choice! If you are only picking from the same distribution once,
 `randutil` will be faster. `weightedrand` optimizes for repeated calls at the
 expense of some initialization time and memory storage.
+
+## Requirements
+
+weightedrand >= v2 requires go1.18 or greater. For support on earlier versions
+of go, use weightedrand [v1](https://github.com/mroth/weightedrand/tree/v1).
 
 ## Credits
 
