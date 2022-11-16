@@ -1,6 +1,6 @@
 # weightedrand :balance_scale:
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/mroth/weightedrand)](https://pkg.go.dev/github.com/mroth/weightedrand)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/mroth/weightedrand)](https://pkg.go.dev/github.com/mroth/weightedrand/v2)
 [![CodeFactor](https://www.codefactor.io/repository/github/mroth/weightedrand/badge)](https://www.codefactor.io/repository/github/mroth/weightedrand)
 [![Build Status](https://github.com/mroth/weightedrand/workflows/test/badge.svg)](https://github.com/mroth/weightedrand/actions)
 [![codecov](https://codecov.io/gh/mroth/weightedrand/branch/main/graph/badge.svg)](https://codecov.io/gh/mroth/weightedrand)
