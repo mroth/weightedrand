@@ -20,8 +20,6 @@ import (
 )
 
 func main() {
-    rand.Seed(time.Now().UTC().UnixNano()) // always seed random!
-
     chooser, _ := weightedrand.NewChooser(
         weightedrand.NewChoice('🍒', 0),
         weightedrand.NewChoice('🍋', 1),

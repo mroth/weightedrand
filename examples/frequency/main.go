@@ -3,15 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
-	"math/rand"
-	"time"
 
 	"github.com/mroth/weightedrand/v2"
 )
 
 func main() {
-	rand.Seed(time.Now().UTC().UnixNano()) // always seed random!
-
 	c, err := weightedrand.NewChooser(
 		weightedrand.NewChoice('🍒', 0),
 		weightedrand.NewChoice('🍋', 1),
