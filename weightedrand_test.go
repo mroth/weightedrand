@@ -81,9 +81,41 @@ func TestNewChooser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewChooser(tt.cs...)
+			c, err := NewChooser(tt.cs...)
 			if err != tt.wantErr {
 				t.Errorf("NewChooser() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if err == nil { // run a few Picks to make sure there are no panics
+				for i := 0; i < 10; i++ {
+					_ = c.Pick()
+				}
+			}
+		})
+	}
+
+	u64tests := []struct {
+		name    string
+		cs      []Choice[rune, uint64]
+		wantErr error
+	}{
+		{
+			name:    "weight overflow from single uint64 exceeding system maxInt",
+			cs:      []Choice[rune, uint64]{{Item: 'a', Weight: maxInt + 1}},
+			wantErr: errWeightOverflow,
+		},
+	}
+	for _, tt := range u64tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c, err := NewChooser(tt.cs...)
+			if err != tt.wantErr {
+				t.Errorf("NewChooser() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if err == nil { // run a few Picks to make sure there are no panics
+				for i := 0; i < 10; i++ {
+					_ = c.Pick()
+				}
 			}
 		})
 	}
