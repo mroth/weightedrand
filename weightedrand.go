@@ -48,11 +48,16 @@ func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], erro
 	totals := make([]int, len(choices))
 	runningTotal := 0
 	for i, c := range choices {
-		weight := int(c.Weight)
-		if weight < 0 {
+		if c.Weight < 0 {
 			continue // ignore negative weights, can never be picked
 		}
 
+		// case of single ~uint64 or similar value that exceeds maxInt on its own
+		if uint64(c.Weight) >= maxInt {
+			return nil, errWeightOverflow
+		}
+
+		weight := int(c.Weight) // convert weight to int for internal counter usage
 		if (maxInt - runningTotal) <= weight {
 			return nil, errWeightOverflow
 		}
@@ -68,8 +73,9 @@ func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], erro
 }
 
 const (
-	intSize = 32 << (^uint(0) >> 63) // cf. strconv.IntSize
-	maxInt  = 1<<(intSize-1) - 1
+	intSize   = 32 << (^uint(0) >> 63) // cf. strconv.IntSize
+	maxInt    = 1<<(intSize-1) - 1
+	maxUint64 = 1<<64 - 1
 )
 
 // Possible errors returned by NewChooser, preventing the creation of a Chooser
