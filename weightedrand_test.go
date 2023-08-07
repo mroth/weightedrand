@@ -33,10 +33,6 @@ func Example() {
 *	Tests
 *******************************************************************************/
 
-func init() {
-	rand.Seed(time.Now().UTC().UnixNano()) // only necessary prior to go1.20
-}
-
 const (
 	testChoices    = 10
 	testIterations = 1000000
@@ -246,6 +242,24 @@ func BenchmarkPick(b *testing.B) {
 }
 
 func BenchmarkPickParallel(b *testing.B) {
+	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
+		b.Run(strconv.Itoa(n), func(b *testing.B) {
+			choices := mockChoices(n)
+			chooser, err := NewChooser(choices...)
+			if err != nil {
+				b.Fatal(err)
+			}
+			b.ResetTimer()
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					_ = chooser.Pick()
+				}
+			})
+		})
+	}
+}
+
+func BenchmarkPickSourceParallel(b *testing.B) {
 	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
 		b.Run(strconv.Itoa(n), func(b *testing.B) {
 			choices := mockChoices(n)
