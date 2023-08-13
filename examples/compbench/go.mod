@@ -1,6 +1,6 @@
 module github.com/mroth/weightedrand/examples/compbench
 
-go 1.18
+go 1.21
 
 require (
 	github.com/jmcvetta/randutil v0.0.0-20150817122601-2bb1b664bcff
