@@ -2,8 +2,8 @@ package weightedrand
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
-	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -209,11 +209,11 @@ func verifyFrequencyCounts(t *testing.T, counts map[int]int, choices []Choice[in
 *******************************************************************************/
 
 const BMMinChoices = 10
-const BMMaxChoices = 1000000
+const BMMaxChoices = 10_000_000
 
 func BenchmarkNewChooser(b *testing.B) {
 	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
-		b.Run(strconv.Itoa(n), func(b *testing.B) {
+		b.Run(fmt.Sprintf("size=%s", fmt1eN(n)), func(b *testing.B) {
 			choices := mockChoices(n)
 			b.ResetTimer()
 
@@ -226,7 +226,7 @@ func BenchmarkNewChooser(b *testing.B) {
 
 func BenchmarkPick(b *testing.B) {
 	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
-		b.Run(strconv.Itoa(n), func(b *testing.B) {
+		b.Run(fmt.Sprintf("size=%s", fmt1eN(n)), func(b *testing.B) {
 			choices := mockChoices(n)
 			chooser, err := NewChooser(choices...)
 			if err != nil {
@@ -243,7 +243,7 @@ func BenchmarkPick(b *testing.B) {
 
 func BenchmarkPickParallel(b *testing.B) {
 	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
-		b.Run(strconv.Itoa(n), func(b *testing.B) {
+		b.Run(fmt.Sprintf("size=%s", fmt1eN(n)), func(b *testing.B) {
 			choices := mockChoices(n)
 			chooser, err := NewChooser(choices...)
 			if err != nil {
@@ -261,7 +261,7 @@ func BenchmarkPickParallel(b *testing.B) {
 
 func BenchmarkPickSourceParallel(b *testing.B) {
 	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
-		b.Run(strconv.Itoa(n), func(b *testing.B) {
+		b.Run(fmt.Sprintf("size=%s", fmt1eN(n)), func(b *testing.B) {
 			choices := mockChoices(n)
 			chooser, err := NewChooser(choices...)
 			if err != nil {
@@ -287,4 +287,10 @@ func mockChoices(n int) []Choice[rune, int] {
 		choices = append(choices, c)
 	}
 	return choices
+}
+
+// fmt1eN returns simplified order of magnitude scientific notation for n,
+// e.g. "1e2" for 100, "1e7" for 10 million.
+func fmt1eN(n int) string {
+	return fmt.Sprintf("1e%d", int(math.Log10(float64(n))))
 }
