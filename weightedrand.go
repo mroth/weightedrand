@@ -3,11 +3,9 @@
 // each element to be selected not being equal, but defined by relative
 // "weights" (or probabilities). This is called weighted random selection.
 //
-// Compare this package with (github.com/jmcvetta/randutil).WeightedChoice,
-// which is optimized for the single operation case. In contrast, this package
-// creates a presorted cache optimized for binary search, allowing for repeated
-// selections from the same set to be significantly faster, especially for large
-// data sets.
+// This package creates a presorted cache optimized for binary search, allowing
+// for repeated selections from the same set to be significantly faster,
+// especially for large data sets.
 package weightedrand
 
 import (
@@ -93,7 +91,7 @@ var (
 
 // Pick returns a single weighted random Choice.Item from the Chooser.
 //
-// Utilizes global rand as the source of randomness.
+// Utilizes global rand as the source of randomness. Safe for concurrent usage.
 func (c Chooser[T, W]) Pick() T {
 	r := rand.Intn(c.max) + 1
 	i := searchInts(c.totals, r)
@@ -109,6 +107,10 @@ func (c Chooser[T, W]) Pick() T {
 //
 // It is the responsibility of the caller to ensure the provided rand.Source is
 // free from thread safety issues.
+//
+// Deprecated: Since go1.21 global rand no longer suffers from lock contention
+// when used in multiple high throughput goroutines, as long as you don't
+// manually seed it. Use [Chooser.Pick] instead.
 func (c Chooser[T, W]) PickSource(rs *rand.Rand) T {
 	r := rs.Intn(c.max) + 1
 	i := searchInts(c.totals, r)
@@ -122,7 +124,9 @@ func (c Chooser[T, W]) PickSource(rs *rand.Rand) T {
 // overhead.
 //
 // Thus, this is essentially manually inlined version.  In our use case here, it
-// results in a up to ~33% overall throughput increase for Pick().
+// results in a significant throughput increase for Pick.
+//
+// See also github.com/mroth/xsort.
 func searchInts(a []int, x int) int {
 	// Possible further future optimization for searchInts via SIMD if we want
 	// to write some Go assembly code: http://0x80.pl/articles/simd-search.html
