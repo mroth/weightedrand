@@ -10,6 +10,7 @@ package weightedrand
 
 import (
 	"errors"
+	"math"
 	"math/rand"
 	"sort"
 )
@@ -33,8 +34,8 @@ func NewChoice[T any, W integer](item T, weight W) Choice[T, W] {
 // performance on repeated calls for weighted random selection.
 type Chooser[T any, W integer] struct {
 	data   []Choice[T, W]
-	totals []int
-	max    int
+	totals []int64
+	max    int64
 }
 
 // NewChooser initializes a new Chooser for picking from the provided choices.
@@ -43,10 +44,11 @@ func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], erro
 		return choices[i].Weight < choices[j].Weight
 	})
 
-	totals := make([]int, len(choices))
-	runningTotal := 0
+	totals := make([]int64, len(choices))
+	runningTotal := int64(0)
 	for i, c := range choices {
-		if c.Weight < 0 {
+		weight := int64(c.Weight)
+		if weight < 0 {
 			continue // ignore negative weights, can never be picked
 		}
 
@@ -55,7 +57,6 @@ func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], erro
 			return nil, errWeightOverflow
 		}
 
-		weight := int(c.Weight) // convert weight to int for internal counter usage
 		if (maxInt - runningTotal) <= weight {
 			return nil, errWeightOverflow
 		}
@@ -71,9 +72,8 @@ func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], erro
 }
 
 const (
-	intSize   = 32 << (^uint(0) >> 63) // cf. strconv.IntSize
-	maxInt    = 1<<(intSize-1) - 1
-	maxUint64 = 1<<64 - 1
+	maxInt    = math.MaxInt64
+	maxUint64 = math.MaxUint64
 )
 
 // Possible errors returned by NewChooser, preventing the creation of a Chooser
@@ -93,7 +93,7 @@ var (
 //
 // Utilizes global rand as the source of randomness. Safe for concurrent usage.
 func (c Chooser[T, W]) Pick() T {
-	r := rand.Intn(c.max) + 1
+	r := rand.Int63n(c.max) + 1
 	i := searchInts(c.totals, r)
 	return c.data[i].Item
 }
@@ -112,7 +112,7 @@ func (c Chooser[T, W]) Pick() T {
 // when used in multiple high throughput goroutines, as long as you don't
 // manually seed it. Use [Chooser.Pick] instead.
 func (c Chooser[T, W]) PickSource(rs *rand.Rand) T {
-	r := rs.Intn(c.max) + 1
+	r := rs.Int63n(c.max) + 1
 	i := searchInts(c.totals, r)
 	return c.data[i].Item
 }
@@ -127,7 +127,8 @@ func (c Chooser[T, W]) PickSource(rs *rand.Rand) T {
 // results in a significant throughput increase for Pick.
 //
 // See also github.com/mroth/xsort.
-func searchInts(a []int, x int) int {
+// results in a up to ~33% overall throughput increase for Pick().
+func searchInts(a []int64, x int64) int {
 	// Possible further future optimization for searchInts via SIMD if we want
 	// to write some Go assembly code: http://0x80.pl/articles/simd-search.html
 	i, j := 0, len(a)
