@@ -10,7 +10,9 @@ package weightedrand
 
 import (
 	"errors"
-	"math/rand"
+	"math"
+	"math/rand/v2"
+	"slices"
 	"sort"
 )
 
@@ -33,8 +35,8 @@ func NewChoice[T any, W integer](item T, weight W) Choice[T, W] {
 // performance on repeated calls for weighted random selection.
 type Chooser[T any, W integer] struct {
 	data   []Choice[T, W]
-	totals []int
-	max    int
+	totals []uint64
+	max    uint64
 }
 
 // NewChooser initializes a new Chooser for picking from the provided choices.
@@ -43,20 +45,15 @@ func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], erro
 		return choices[i].Weight < choices[j].Weight
 	})
 
-	totals := make([]int, len(choices))
-	runningTotal := 0
+	totals := make([]uint64, len(choices))
+	var runningTotal uint64
 	for i, c := range choices {
 		if c.Weight < 0 {
 			continue // ignore negative weights, can never be picked
 		}
 
-		// case of single ~uint64 or similar value that exceeds maxInt on its own
-		if uint64(c.Weight) >= maxInt {
-			return nil, errWeightOverflow
-		}
-
-		weight := int(c.Weight) // convert weight to int for internal counter usage
-		if (maxInt - runningTotal) <= weight {
+		weight := uint64(c.Weight) // convert weight to uint64 for internal counter usage
+		if (math.MaxUint64 - runningTotal) <= weight {
 			return nil, errWeightOverflow
 		}
 		runningTotal += weight
@@ -70,11 +67,6 @@ func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], erro
 	return &Chooser[T, W]{data: choices, totals: totals, max: runningTotal}, nil
 }
 
-const (
-	intSize   = 32 << (^uint(0) >> 63) // cf. strconv.IntSize
-	maxInt    = 1<<(intSize-1) - 1
-	maxUint64 = 1<<64 - 1
-)
 
 // Possible errors returned by NewChooser, preventing the creation of a Chooser
 // with unsafe runtime states.
@@ -93,51 +85,7 @@ var (
 //
 // Utilizes global rand as the source of randomness. Safe for concurrent usage.
 func (c Chooser[T, W]) Pick() T {
-	r := rand.Intn(c.max) + 1
-	i := searchInts(c.totals, r)
+	r := rand.Uint64N(c.max) + 1
+	i, _ := slices.BinarySearch(c.totals, r)
 	return c.data[i].Item
-}
-
-// PickSource returns a single weighted random Choice.Item from the Chooser,
-// utilizing the provided *rand.Rand source rs for randomness.
-//
-// The primary use-case for this is avoid lock contention from the global random
-// source if utilizing Chooser(s) from multiple goroutines in extremely
-// high-throughput situations.
-//
-// It is the responsibility of the caller to ensure the provided rand.Source is
-// free from thread safety issues.
-//
-// Deprecated: Since go1.21 global rand no longer suffers from lock contention
-// when used in multiple high throughput goroutines, as long as you don't
-// manually seed it. Use [Chooser.Pick] instead.
-func (c Chooser[T, W]) PickSource(rs *rand.Rand) T {
-	r := rs.Intn(c.max) + 1
-	i := searchInts(c.totals, r)
-	return c.data[i].Item
-}
-
-// The standard library sort.SearchInts() just wraps the generic sort.Search()
-// function, which takes a function closure to determine truthfulness. However,
-// since this function is utilized within a for loop, it cannot currently be
-// properly inlined by the compiler, resulting in non-trivial performance
-// overhead.
-//
-// Thus, this is essentially manually inlined version.  In our use case here, it
-// results in a significant throughput increase for Pick.
-//
-// See also github.com/mroth/xsort.
-func searchInts(a []int, x int) int {
-	// Possible further future optimization for searchInts via SIMD if we want
-	// to write some Go assembly code: http://0x80.pl/articles/simd-search.html
-	i, j := 0, len(a)
-	for i < j {
-		h := int(uint(i+j) >> 1) // avoid overflow when computing h
-		if a[h] < x {
-			i = h + 1
-		} else {
-			j = h
-		}
-	}
-	return i
 }
