@@ -3,10 +3,8 @@ package weightedrand
 import (
 	"fmt"
 	"math"
-	"math/rand"
-	"sync"
+	"math/rand/v2"
 	"testing"
-	"time"
 )
 
 /******************************************************************************
@@ -41,37 +39,42 @@ const (
 func TestNewChooser(t *testing.T) {
 	tests := []struct {
 		name    string
-		cs      []Choice[rune, int]
+		cs      []Choice[rune, int64]
 		wantErr error
 	}{
 		{
 			name:    "zero choices",
-			cs:      []Choice[rune, int]{},
+			cs:      []Choice[rune, int64]{},
 			wantErr: errNoValidChoices,
 		},
 		{
 			name:    "no choices with positive weight",
-			cs:      []Choice[rune, int]{{Item: 'a', Weight: 0}, {Item: 'b', Weight: 0}},
+			cs:      []Choice[rune, int64]{{Item: 'a', Weight: 0}, {Item: 'b', Weight: 0}},
 			wantErr: errNoValidChoices,
 		},
 		{
 			name:    "choice with weight equals 1",
-			cs:      []Choice[rune, int]{{Item: 'a', Weight: 1}},
+			cs:      []Choice[rune, int64]{{Item: 'a', Weight: 1}},
 			wantErr: nil,
 		},
 		{
-			name:    "weight overflow",
-			cs:      []Choice[rune, int]{{Item: 'a', Weight: maxInt/2 + 1}, {Item: 'b', Weight: maxInt/2 + 1}},
+			name: "weight overflow",
+			cs: []Choice[rune, int64]{
+				{Item: 'a', Weight: math.MaxInt64/2 + 1},
+				{Item: 'b', Weight: math.MaxInt64/2 + 1},
+				{Item: 'c', Weight: math.MaxInt64/2 + 1},
+				{Item: 'd', Weight: math.MaxInt64/2 + 1},
+			},
 			wantErr: errWeightOverflow,
 		},
 		{
 			name:    "nominal case",
-			cs:      []Choice[rune, int]{{Item: 'a', Weight: 1}, {Item: 'b', Weight: 2}},
+			cs:      []Choice[rune, int64]{{Item: 'a', Weight: 1}, {Item: 'b', Weight: 2}},
 			wantErr: nil,
 		},
 		{
 			name:    "negative weight case",
-			cs:      []Choice[rune, int]{{Item: 'a', Weight: 3}, {Item: 'b', Weight: -2}},
+			cs:      []Choice[rune, int64]{{Item: 'a', Weight: 3}, {Item: 'b', Weight: -2}},
 			wantErr: nil,
 		},
 	}
@@ -96,8 +99,24 @@ func TestNewChooser(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name:    "weight overflow from single uint64 exceeding system maxInt",
-			cs:      []Choice[rune, uint64]{{Item: 'a', Weight: maxInt + 1}},
+			name:    "single uint64 equalling MaxUint64",
+			cs:      []Choice[rune, uint64]{{Item: 'a', Weight: math.MaxUint64}},
+			wantErr: errWeightOverflow,
+		},
+		{
+			name: "single uint64 equalling MaxUint64 and a zero weight",
+			cs: []Choice[rune, uint64]{
+				{Item: 'a', Weight: math.MaxUint64},
+				{Item: 'b', Weight: 0},
+			},
+			wantErr: errWeightOverflow,
+		},
+		{
+			name: "multiple uint64s with sum MaxUint64",
+			cs: []Choice[rune, uint64]{
+				{Item: 'a', Weight: math.MaxUint64/2 + 1},
+				{Item: 'b', Weight: math.MaxUint64/2 + 1},
+			},
 			wantErr: errWeightOverflow,
 		},
 	}
@@ -137,38 +156,6 @@ func TestChooser_Pick(t *testing.T) {
 	}
 
 	verifyFrequencyCounts(t, counts, choices)
-}
-
-// TestChooser_PickSource is the same test methodology as TestChooser_Pick, but
-// here we use the PickSource method and access the same chooser concurrently
-// from multiple different goroutines, each providing its own source of
-// randomness.
-func TestChooser_PickSource(t *testing.T) {
-	choices := mockFrequencyChoices(t, testChoices)
-	chooser, err := NewChooser(choices...)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("totals in chooser", chooser.totals)
-
-	counts1 := make(map[int]int)
-	counts2 := make(map[int]int)
-	var wg sync.WaitGroup
-	wg.Add(2)
-	checker := func(counts map[int]int) {
-		defer wg.Done()
-		rs := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
-		for i := 0; i < testIterations/2; i++ {
-			c := chooser.PickSource(rs)
-			counts[c]++
-		}
-	}
-	go checker(counts1)
-	go checker(counts2)
-	wg.Wait()
-
-	verifyFrequencyCounts(t, counts1, choices)
-	verifyFrequencyCounts(t, counts2, choices)
 }
 
 // Similar to what is used in randutil test, but in randomized order to avoid
@@ -259,30 +246,11 @@ func BenchmarkPickParallel(b *testing.B) {
 	}
 }
 
-func BenchmarkPickSourceParallel(b *testing.B) {
-	for n := BMMinChoices; n <= BMMaxChoices; n *= 10 {
-		b.Run(fmt.Sprintf("size=%s", fmt1eN(n)), func(b *testing.B) {
-			choices := mockChoices(n)
-			chooser, err := NewChooser(choices...)
-			if err != nil {
-				b.Fatal(err)
-			}
-			b.ResetTimer()
-			b.RunParallel(func(pb *testing.PB) {
-				rs := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
-				for pb.Next() {
-					_ = chooser.PickSource(rs)
-				}
-			})
-		})
-	}
-}
-
 func mockChoices(n int) []Choice[rune, int] {
 	choices := make([]Choice[rune, int], 0, n)
 	for i := 0; i < n; i++ {
 		s := '🥑'
-		w := rand.Intn(10)
+		w := rand.IntN(10)
 		c := NewChoice(s, w)
 		choices = append(choices, c)
 	}
