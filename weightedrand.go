@@ -9,11 +9,11 @@
 package weightedrand
 
 import (
+	"cmp"
 	"errors"
 	"math"
 	"math/rand/v2"
 	"slices"
-	"sort"
 )
 
 // Choice is a generic wrapper that can be used to add weights for any item.
@@ -41,8 +41,8 @@ type Chooser[T any, W integer] struct {
 
 // NewChooser initializes a new Chooser for picking from the provided choices.
 func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], error) {
-	sort.Slice(choices, func(i, j int) bool {
-		return choices[i].Weight < choices[j].Weight
+	slices.SortFunc(choices, func(a, b Choice[T, W]) int {
+		return cmp.Compare(a.Weight, b.Weight)
 	})
 
 	totals := make([]uint64, len(choices))
@@ -66,7 +66,6 @@ func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], erro
 
 	return &Chooser[T, W]{data: choices, totals: totals, max: runningTotal}, nil
 }
-
 
 // Possible errors returned by NewChooser, preventing the creation of a Chooser
 // with unsafe runtime states.
