@@ -11,4 +11,4 @@ jobs:
         with:
           go-version: "stable"
       - run: go test -coverprofile=coverage.txt -covermode=atomic
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
