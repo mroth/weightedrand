@@ -1,3 +1,3 @@
-module github.com/mroth/weightedrand/v2
+module github.com/mroth/weightedrand/v3
 
-go 1.18
+go 1.22
