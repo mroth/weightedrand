@@ -112,13 +112,18 @@ var (
 	errNoValidChoices = errors.New("zero Choices with Weight >= 1")
 )
 
+func (c Chooser[T, W]) pick(x int) T {
+	// Deliberately not documented because it is a ‘private’ function.
+	i := c.searchIndex(x)
+	return c.data[i].Item
+}
+
 // Pick returns a single weighted random Choice.Item from the Chooser.
 //
 // Utilizes global rand as the source of randomness. Safe for concurrent usage.
 func (c Chooser[T, W]) Pick() T {
 	r := rand.Intn(c.max) + 1
-	i := searchInts(c.totals, r)
-	return c.data[i].Item
+	return c.pick(r)
 }
 
 // PickSource returns a single weighted random Choice.Item from the Chooser,
@@ -136,8 +141,7 @@ func (c Chooser[T, W]) Pick() T {
 // manually seed it. Use [Chooser.Pick] instead.
 func (c Chooser[T, W]) PickSource(rs *rand.Rand) T {
 	r := rs.Intn(c.max) + 1
-	i := searchInts(c.totals, r)
-	return c.data[i].Item
+	return c.pick(r)
 }
 
 // The standard library sort.SearchInts() just wraps the generic sort.Search()
@@ -150,13 +154,13 @@ func (c Chooser[T, W]) PickSource(rs *rand.Rand) T {
 // results in a significant throughput increase for Pick.
 //
 // See also github.com/mroth/xsort.
-func searchInts(a []int, x int) int {
+func (c Chooser[T, W]) searchIndex(x int) int {
 	// Possible further future optimization for searchInts via SIMD if we want
 	// to write some Go assembly code: http://0x80.pl/articles/simd-search.html
-	i, j := 0, len(a)
+	i, j := 0, len(c.totals)
 	for i < j {
 		h := int(uint(i+j) >> 1) // avoid overflow when computing h
-		if a[h] < x {
+		if c.totals[h] < x {
 			i = h + 1
 		} else {
 			j = h
