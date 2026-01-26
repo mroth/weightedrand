@@ -18,6 +18,7 @@ import (
 type Choice[T any, W integer] struct {
 	Item   T
 	Weight W
+	rt     int // running total
 }
 
 type integer interface {
@@ -32,13 +33,11 @@ func NewChoice[T any, W integer](item T, weight W) Choice[T, W] {
 // A Chooser caches many possible Choices in a structure designed to improve
 // performance on repeated calls for weighted random selection.
 type Chooser[T any, W integer] struct {
-	data   []Choice[T, W]
-	totals []int
-	max    int
+	data []Choice[T, W]
+	max  int
 }
 
 func cmpByWeight[T any, W integer](a, b Choice[T, W]) int {
-	// Deliberately not documented because it is a ‘private’ function.
 	if a.Weight < b.Weight {
 		return -1
 	}
@@ -48,11 +47,12 @@ func cmpByWeight[T any, W integer](a, b Choice[T, W]) int {
 	return 1
 }
 
-func calcTotals[T any, W integer](cs []Choice[T, W]) ([]int, error) {
-	// cs must be sorted by weight already.
-	ts := make([]int, len(cs))
+// NewChooser initializes a new Chooser for picking from the provided choices.
+func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], error) {
+	slices.SortFunc(choices, cmpByWeight)
+
 	runningTotal := 0
-	for i, c := range cs {
+	for i, c := range choices {
 		if c.Weight < 0 {
 			continue // ignore negative weights, can never be picked
 		}
@@ -67,28 +67,15 @@ func calcTotals[T any, W integer](cs []Choice[T, W]) ([]int, error) {
 			return nil, errWeightOverflow
 		}
 		runningTotal += weight
-		ts[i] = runningTotal
+		choices[i].rt = runningTotal
 	}
 
 	if runningTotal < 1 {
-		return []int{}, errNoValidChoices
+		return nil, errNoValidChoices
 	}
-
-	return ts, nil
-}
-
-// NewChooser initializes a new Chooser for picking from the provided choices.
-func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], error) {
-	slices.SortFunc(choices, cmpByWeight)
-	totals, err := calcTotals(choices)
-	if err != nil {
-		return nil, err
-	}
-	maxTotal := totals[len(totals)-1]
 	ChooserInstance := Chooser[T, W]{
-		data:   choices,
-		totals: totals,
-		max:    maxTotal,
+		data: choices,
+		max:  runningTotal, // could be choices[len(choices)-1].rt, but we just have it in variable
 	}
 	return &ChooserInstance, nil
 }
@@ -113,7 +100,6 @@ var (
 )
 
 func (c Chooser[T, W]) pick(x int) T {
-	// Deliberately not documented because it is a ‘private’ function.
 	i := c.searchIndex(x)
 	return c.data[i].Item
 }
@@ -157,10 +143,10 @@ func (c Chooser[T, W]) PickSource(rs *rand.Rand) T {
 func (c Chooser[T, W]) searchIndex(x int) int {
 	// Possible further future optimization for searchInts via SIMD if we want
 	// to write some Go assembly code: http://0x80.pl/articles/simd-search.html
-	i, j := 0, len(c.totals)
+	i, j := 0, len(c.data)
 	for i < j {
 		h := int(uint(i+j) >> 1) // avoid overflow when computing h
-		if c.totals[h] < x {
+		if c.data[h].rt < x {
 			i = h + 1
 		} else {
 			j = h

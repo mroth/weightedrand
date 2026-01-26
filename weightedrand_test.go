@@ -126,7 +126,7 @@ func TestChooser_Pick(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("totals in chooser", chooser.totals)
+	t.Log("data in chooser", chooser.data)
 
 	// run Pick() a million times, and record how often it returns each of the
 	// possible choices.
@@ -149,7 +149,7 @@ func TestChooser_PickSource(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("totals in chooser", chooser.totals)
+	t.Log("data in chooser", chooser.data)
 
 	counts1 := make(map[int]int)
 	counts2 := make(map[int]int)
