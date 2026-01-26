@@ -11,7 +11,7 @@ package weightedrand
 import (
 	"errors"
 	"math/rand"
-	"sort"
+	"slices"
 )
 
 // Choice is a generic wrapper that can be used to add weights for any item.
@@ -37,15 +37,22 @@ type Chooser[T any, W integer] struct {
 	max    int
 }
 
-// NewChooser initializes a new Chooser for picking from the provided choices.
-func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], error) {
-	sort.Slice(choices, func(i, j int) bool {
-		return choices[i].Weight < choices[j].Weight
-	})
+func cmpByWeight[T any, W integer](a, b Choice[T, W]) int {
+	// Deliberately not documented because it is a ‘private’ function.
+	if a.Weight < b.Weight {
+		return -1
+	}
+	if a.Weight == b.Weight {
+		return 0
+	}
+	return 1
+}
 
-	totals := make([]int, len(choices))
+func calcTotals[T any, W integer](cs []Choice[T, W]) ([]int, error) {
+	// cs must be sorted by weight already.
+	ts := make([]int, len(cs))
 	runningTotal := 0
-	for i, c := range choices {
+	for i, c := range cs {
 		if c.Weight < 0 {
 			continue // ignore negative weights, can never be picked
 		}
@@ -60,14 +67,30 @@ func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], erro
 			return nil, errWeightOverflow
 		}
 		runningTotal += weight
-		totals[i] = runningTotal
+		ts[i] = runningTotal
 	}
 
 	if runningTotal < 1 {
-		return nil, errNoValidChoices
+		return []int{}, errNoValidChoices
 	}
 
-	return &Chooser[T, W]{data: choices, totals: totals, max: runningTotal}, nil
+	return ts, nil
+}
+
+// NewChooser initializes a new Chooser for picking from the provided choices.
+func NewChooser[T any, W integer](choices ...Choice[T, W]) (*Chooser[T, W], error) {
+	slices.SortFunc(choices, cmpByWeight)
+	totals, err := calcTotals(choices)
+	if err != nil {
+		return nil, err
+	}
+	maxTotal := totals[len(totals)-1]
+	ChooserInstance := Chooser[T, W]{
+		data:   choices,
+		totals: totals,
+		max:    maxTotal,
+	}
+	return &ChooserInstance, nil
 }
 
 const (
