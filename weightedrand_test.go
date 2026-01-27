@@ -86,7 +86,7 @@ func TestNewChooser(t *testing.T) {
 			}
 
 			if err == nil { // run a few Picks to make sure there are no panics
-				for i := 0; i < 10; i++ {
+				for range 10 {
 					_ = c.Pick()
 				}
 			}
@@ -128,7 +128,7 @@ func TestNewChooser(t *testing.T) {
 			}
 
 			if err == nil { // run a few Picks to make sure there are no panics
-				for i := 0; i < 10; i++ {
+				for range 10 {
 					_ = c.Pick()
 				}
 			}
@@ -150,7 +150,7 @@ func TestChooser_Pick(t *testing.T) {
 	// run Pick() a million times, and record how often it returns each of the
 	// possible choices.
 	counts := make(map[int]int)
-	for i := 0; i < testIterations; i++ {
+	for range testIterations {
 		c := chooser.Pick()
 		counts[c]++
 	}
@@ -248,7 +248,7 @@ func BenchmarkPickParallel(b *testing.B) {
 
 func mockChoices(n int) []Choice[rune, int] {
 	choices := make([]Choice[rune, int], 0, n)
-	for i := 0; i < n; i++ {
+	for range n {
 		s := '🥑'
 		w := rand.IntN(10)
 		c := NewChoice(s, w)
