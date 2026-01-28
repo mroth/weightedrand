@@ -1,6 +1,6 @@
 # weightedrand :balance_scale:
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/mroth/weightedrand)](https://pkg.go.dev/github.com/mroth/weightedrand/v2)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/mroth/weightedrand)](https://pkg.go.dev/github.com/mroth/weightedrand/v3)
 [![CodeFactor](https://www.codefactor.io/repository/github/mroth/weightedrand/badge)](https://www.codefactor.io/repository/github/mroth/weightedrand)
 [![Build Status](https://github.com/mroth/weightedrand/workflows/test/badge.svg)](https://github.com/mroth/weightedrand/actions)
 [![codecov](https://codecov.io/gh/mroth/weightedrand/graph/badge.svg?token=EOEE4E4Y0P)](https://codecov.io/gh/mroth/weightedrand)
@@ -16,7 +16,7 @@ element to be selected are not equal, but rather defined by relative "weights"
 ```go
 import (
     /* ...snip... */
-    "github.com/mroth/weightedrand/v2"
+    "github.com/mroth/weightedrand/v3"
 )
 
 func main() {
@@ -73,8 +73,8 @@ expense of some initialization time and memory storage.
 
 ## Requirements
 
-weightedrand >= v2 requires go1.18 or greater. For support on earlier versions
-of go, use weightedrand [v1](https://github.com/mroth/weightedrand/tree/v1).
+weightedrand v3 requires Go 1.22 or greater. For support on earlier versions
+of Go, use weightedrand [v2](https://github.com/mroth/weightedrand/tree/v2).
 
 ## Credits
 
