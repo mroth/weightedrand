@@ -158,6 +158,28 @@ func TestChooser_Pick(t *testing.T) {
 	verifyFrequencyCounts(t, counts, choices)
 }
 
+// TestChooser_PickWith verifies that PickWith uses the provided rand source,
+// producing deterministic results when seeded identically.
+func TestChooser_PickWith(t *testing.T) {
+	choices := mockFrequencyChoices(t, testChoices)
+	chooser, err := NewChooser(choices...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Two identically seeded sources should produce identical sequences
+	r1 := rand.New(rand.NewPCG(42, 42))
+	r2 := rand.New(rand.NewPCG(42, 42))
+
+	for range 10 {
+		a := chooser.PickWith(r1)
+		b := chooser.PickWith(r2)
+		if a != b {
+			t.Fatalf("PickWith not deterministic: got %v and %v", a, b)
+		}
+	}
+}
+
 // Similar to what is used in randutil test, but in randomized order to avoid
 // any issues with algorithms that are accidentally dependant on presorted data.
 func mockFrequencyChoices(t *testing.T, n int) []Choice[int, int] {
